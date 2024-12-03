@@ -152,40 +152,39 @@ double oblicz_temperatura_poczatkowa(const vector<int>& trasa, const vector<vect
 }
 
 // Algorytm Symulowanego Wyżarzania
-vector<int> symulowane_wyzarzanie(const vector<vector<int>>& macierz_kosztow, double wspolczynnik_a, int liczba_iteracji) {
-	int liczba_miast = macierz_kosztow.size();
+vector<int> symulowane_wyzarzanie(const vector<vector<int>>& macierz_kosztow, double wspolczynnik_a, int liczba_iteracji, int liczba_miast) {
 
 	// Inicjalizacja trasy początkowej
 	vector<int> obecna_trasa(liczba_miast);
-	iota(obecna_trasa.begin(), obecna_trasa.end(), 0); // iota wypełnia vektor obecna_trasa kolejnymi liczbami zaczynając od 0
+	iota(obecna_trasa.begin(), obecna_trasa.end(), 0); // iota wypełnia wektor obecna_trasa kolejnymi liczbami zaczynając od 0
 
 	random_device rd;
 	mt19937 gen(rd());
-	shuffle(obecna_trasa.begin() + 1, obecna_trasa.end(), gen);
+	shuffle(obecna_trasa.begin() + 1, obecna_trasa.end(), gen); // losowe wymieszanie wartości wektora obecna_trasa
 
-	int obecny_koszt = oblicz_koszt(obecna_trasa, macierz_kosztow);
-	vector<int> najlepsza_trasa = obecna_trasa;
-	int najlepszy_koszt = obecny_koszt;
+	int obecny_koszt = oblicz_koszt(obecna_trasa, macierz_kosztow); // liczy koszt początkowej trasy na podstawie macierzy kosztów
+	vector<int> najlepsza_trasa = obecna_trasa; // zapisuje początkową trasę jako najlepszą
+	int najlepszy_koszt = obecny_koszt; // i początkowy koszt jako najlepszy
 
-	double temperatura = oblicz_temperatura_poczatkowa(obecna_trasa, macierz_kosztow);
+	double temperatura = oblicz_temperatura_poczatkowa(obecna_trasa, macierz_kosztow); // liczy temperaturę początkową
 
 	for (int iter = 0; iter < liczba_iteracji; ++iter) {
-		vector<int> nowa_trasa = generuj_sasiedztwo(obecna_trasa);
+		vector<int> nowa_trasa = generuj_sasiedztwo(obecna_trasa); // generuje nową trasę w sąsiedztwie poprzedniej(zmienia 2 losowe miasta)
 		int nowy_koszt = oblicz_koszt(nowa_trasa, macierz_kosztow);
 
-		if (nowy_koszt < obecny_koszt || exp((obecny_koszt - nowy_koszt) / temperatura) > uniform_real_distribution<>(0, 1)(gen)) {
-			obecna_trasa = nowa_trasa;
+		if (nowy_koszt < obecny_koszt || exp((obecny_koszt - nowy_koszt) / temperatura) > uniform_real_distribution<>(0, 1)(gen)) { // porównuje koszty i akceptuje jeśli < lub jeśli większy ale o mało
+			obecna_trasa = nowa_trasa; // akceptuje = aktualizuje obecne trasy i koszta
 			obecny_koszt = nowy_koszt;
 
-			if (nowy_koszt < najlepszy_koszt) {
+			if (nowy_koszt < najlepszy_koszt) { // jeśli były najlepsze to zaoisujemy jako najlepsze
 				najlepsza_trasa = nowa_trasa;
 				najlepszy_koszt = nowy_koszt;
 			}
 		}
 
 		// Schładzanie temperatury
-		temperatura *= wspolczynnik_a;
-		if (temperatura < 1e-5) break; // Zatrzymanie algorytmu, gdy temperatura jest bardzo niska
+		temperatura *= wspolczynnik_a; // zmniejsza temperaturę
+		if (temperatura < 1e-5) break; // zatrzymuje algorytm, gdy temperatura jest bardzo niska
 	}
 
 	cout << "Najlepsza znaleziona trasa: ";
@@ -246,7 +245,7 @@ int main()
 			cout << "Podaj liczbe iteracji: ";
 			cin >> liczba_iteracji;
 
-			symulowane_wyzarzanie(macierz_kosztow, wspolczynnik_a, liczba_iteracji);
+			symulowane_wyzarzanie(macierz_kosztow, wspolczynnik_a, liczba_iteracji, liczba_miast);
 			break;
 		}
 
