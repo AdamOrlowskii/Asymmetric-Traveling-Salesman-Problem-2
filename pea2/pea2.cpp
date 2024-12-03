@@ -8,6 +8,10 @@
 #include <limits>
 #include <cmath>
 #include <sstream>
+#include <random>
+#include <cmath>
+#include <functional>
+#include <numeric>
 using namespace std;
 using namespace std::chrono;
 
@@ -59,6 +63,7 @@ void wypisanie_macierzy(const vector<vector<int>>& macierz_kosztow, int liczba_m
 		cout << endl;
 	}
 }
+
 void rozwiazanie_zachlanne(const vector<vector<int>>& macierz_kosztow, int liczba_miast) {
 	vector<bool> odwiedzone(liczba_miast, false);
 	vector<int> sciezka; // Przechowywana ścieżka odwiedzonych miast
@@ -102,6 +107,98 @@ void rozwiazanie_zachlanne(const vector<vector<int>>& macierz_kosztow, int liczb
 	cout << "Calkowity koszt rozwiazania: " << koszt_calkowity << endl;
 }
 
+// Funkcja kosztu (np. całkowita długość trasy)
+int oblicz_koszt(const vector<int>& trasa, const vector<vector<int>>& macierz_kosztow) {
+	int koszt = 0;
+	for (size_t i = 0; i < trasa.size() - 1; ++i) {
+		koszt += macierz_kosztow[trasa[i]][trasa[i + 1]];
+	}
+	koszt += macierz_kosztow[trasa.back()][trasa[0]]; // Powrót do punktu początkowego
+	return koszt;
+}
+
+// Sąsiedztwo: zamiana dwóch miast miejscami
+vector<int> generuj_sasiedztwo(const vector<int>& trasa) {
+	vector<int> nowa_trasa = trasa;
+	random_device rd;
+	mt19937 gen(rd());
+	uniform_int_distribution<int> dist(1, trasa.size() - 2); // Unikamy pierwszego miasta (startowego)
+
+	int i = dist(gen);
+	int j = dist(gen);
+	while (i == j) {
+		j = dist(gen); // Unikamy identycznych indeksów
+	}
+
+	swap(nowa_trasa[i], nowa_trasa[j]);
+	return nowa_trasa;
+}
+
+// Oblicz temperaturę początkową (np. na podstawie różnic w kosztach sąsiednich rozwiązań)
+double oblicz_temperatura_poczatkowa(const vector<int>& trasa, const vector<vector<int>>& macierz_kosztow) {
+	double suma_roznic = 0.0;
+	int liczba_prob = 100;
+	random_device rd;
+	mt19937 gen(rd());
+
+	for (int i = 0; i < liczba_prob; ++i) {
+		vector<int> sasiedztwo = generuj_sasiedztwo(trasa);
+		int koszt1 = oblicz_koszt(trasa, macierz_kosztow);
+		int koszt2 = oblicz_koszt(sasiedztwo, macierz_kosztow);
+		suma_roznic += abs(koszt2 - koszt1);
+	}
+
+	return suma_roznic / liczba_prob;
+}
+
+// Algorytm Symulowanego Wyżarzania
+vector<int> symulowane_wyzarzanie(const vector<vector<int>>& macierz_kosztow, double wspolczynnik_a, int liczba_iteracji) {
+	int liczba_miast = macierz_kosztow.size();
+
+	// Inicjalizacja trasy początkowej
+	vector<int> obecna_trasa(liczba_miast);
+	iota(obecna_trasa.begin(), obecna_trasa.end(), 0); // iota wypełnia vektor obecna_trasa kolejnymi liczbami zaczynając od 0
+
+	random_device rd;
+	mt19937 gen(rd());
+	shuffle(obecna_trasa.begin() + 1, obecna_trasa.end(), gen);
+
+	int obecny_koszt = oblicz_koszt(obecna_trasa, macierz_kosztow);
+	vector<int> najlepsza_trasa = obecna_trasa;
+	int najlepszy_koszt = obecny_koszt;
+
+	double temperatura = oblicz_temperatura_poczatkowa(obecna_trasa, macierz_kosztow);
+
+	for (int iter = 0; iter < liczba_iteracji; ++iter) {
+		vector<int> nowa_trasa = generuj_sasiedztwo(obecna_trasa);
+		int nowy_koszt = oblicz_koszt(nowa_trasa, macierz_kosztow);
+
+		if (nowy_koszt < obecny_koszt || exp((obecny_koszt - nowy_koszt) / temperatura) > uniform_real_distribution<>(0, 1)(gen)) {
+			obecna_trasa = nowa_trasa;
+			obecny_koszt = nowy_koszt;
+
+			if (nowy_koszt < najlepszy_koszt) {
+				najlepsza_trasa = nowa_trasa;
+				najlepszy_koszt = nowy_koszt;
+			}
+		}
+
+		// Schładzanie temperatury
+		temperatura *= wspolczynnik_a;
+		if (temperatura < 1e-5) break; // Zatrzymanie algorytmu, gdy temperatura jest bardzo niska
+	}
+
+	cout << "Najlepsza znaleziona trasa: ";
+	for (int miasto : najlepsza_trasa) {
+		cout << miasto << " ";
+	}
+	cout << endl;
+	cout << "Calkowity koszt: " << najlepszy_koszt << endl;
+	cout << "Temperatura koncowa: " << temperatura << endl;
+
+	return najlepsza_trasa;
+}
+
 int main()
 {
 	srand(time(0));
@@ -135,6 +232,24 @@ int main()
 			rozwiazanie_zachlanne(macierz_kosztow, liczba_miast);
 		}
 			  break;
+		case 7: {
+			if (macierz_kosztow.empty() || liczba_miast <= 0) {
+				cout << "Macierz kosztow jest pusta lub liczba miast jest nieprawidlowa!" << endl;
+				break;
+			}
+
+			double wspolczynnik_a;
+			cout << "Podaj wspolczynnik schladzania (np. 0.95): ";
+			cin >> wspolczynnik_a;
+
+			int liczba_iteracji;
+			cout << "Podaj liczbe iteracji: ";
+			cin >> liczba_iteracji;
+
+			symulowane_wyzarzanie(macierz_kosztow, wspolczynnik_a, liczba_iteracji);
+			break;
+		}
+
 		default:
 			cout << "Zly wybor" << endl;
 		}
