@@ -17,10 +17,15 @@
 using namespace std;
 using namespace std::chrono;
 
-vector<int> najlepsza_trasa;
-int najlepszy_koszt;
+int liczba_miast;
+vector<int> najlepsza_trasa_z;
+int najlepszy_koszt_z;
+vector<int> najlepsza_trasa_ts;
+int najlepszy_koszt_ts;
+vector<int> najlepsza_trasa_sw;
+int najlepszy_koszt_sw;
 
-vector<vector<int>> wczytywanie_macierzy(const string& nazwa_pliku, int& liczba_miast) {
+vector<vector<int>> wczytywanie_macierzy(const string& nazwa_pliku) {
 
 	ifstream plik(nazwa_pliku);
 	string linia;
@@ -59,7 +64,7 @@ vector<vector<int>> wczytywanie_macierzy(const string& nazwa_pliku, int& liczba_
 	return macierz_kosztow;
 }
 
-void wypisanie_macierzy(const vector<vector<int>>& macierz_kosztow, int liczba_miast) {
+void wypisanie_macierzy(const vector<vector<int>>& macierz_kosztow) {
 	for (int i = 0; i < liczba_miast; i++) {
 		for (int j = 0; j < liczba_miast; j++) {
 			cout << macierz_kosztow[i][j] << ' ';
@@ -68,14 +73,14 @@ void wypisanie_macierzy(const vector<vector<int>>& macierz_kosztow, int liczba_m
 	}
 }
 
-void rozwiazanie_zachlanne(const vector<vector<int>>& macierz_kosztow, int liczba_miast) {
+void rozwiazanie_zachlanne(const vector<vector<int>>& macierz_kosztow) {
 	vector<bool> odwiedzone(liczba_miast, false);
-	vector<int> sciezka; // Przechowywana ścieżka odwiedzonych miast
-	int koszt_calkowity = 0;
+	najlepsza_trasa_z.clear(); // Przechowywana ścieżka odwiedzonych miast
+	najlepszy_koszt_z = 0;
 
 	int obecne_miasto = 0; // Startujemy z miasta 0
 	odwiedzone[obecne_miasto] = true;
-	sciezka.push_back(obecne_miasto);
+	najlepsza_trasa_z.push_back(obecne_miasto);
 
 	for (int i = 0; i < liczba_miast - 1; ++i) {
 		int najmniejszy_koszt = numeric_limits<int>::max();
@@ -91,24 +96,24 @@ void rozwiazanie_zachlanne(const vector<vector<int>>& macierz_kosztow, int liczb
 
 		// Przejście do następnego miasta
 		if (nastepne_miasto != -1) {
-			koszt_calkowity += najmniejszy_koszt;
+			najlepszy_koszt_z += najmniejszy_koszt;
 			obecne_miasto = nastepne_miasto;
 			odwiedzone[obecne_miasto] = true;
-			sciezka.push_back(obecne_miasto);
+			najlepsza_trasa_z.push_back(obecne_miasto);
 		}
 	}
 
 	// Powrót do miasta początkowego
-	koszt_calkowity += macierz_kosztow[obecne_miasto][0];
-	sciezka.push_back(0);
+	najlepszy_koszt_z += macierz_kosztow[obecne_miasto][0];
+	najlepsza_trasa_z.push_back(0);
 
 	// Wypisanie wyników
 	cout << "Znalezione rozwiazanie zachlanne: ";
-	for (int miasto : sciezka) {
+	for (int miasto : najlepsza_trasa_z) {
 		cout << miasto << " ";
 	}
 	cout << endl;
-	cout << "Calkowity koszt rozwiazania: " << koszt_calkowity << endl;
+	cout << "Calkowity koszt rozwiazania: " << najlepszy_koszt_z << endl;
 }
 
 // Funkcja kosztu (np. całkowita długość trasy)
@@ -156,63 +161,77 @@ double oblicz_temperatura_poczatkowa(const vector<int>& trasa, const vector<vect
 }
 
 // Algorytm Symulowanego Wyżarzania z ograniczeniem czasu
-vector<int> symulowane_wyzarzanie(const vector<vector<int>>& macierz_kosztow, double wspolczynnik_a, int czas_w_sekundach, int liczba_miast, int& najlepszy_koszt_sw) {
+void symulowane_wyzarzanie(const vector<vector<int>>& macierz_kosztow, double wspolczynnik_a, int czas_w_sekundach) {
+	najlepsza_trasa_sw.clear();
+	najlepszy_koszt_sw = 0;
+	// Inicjalizacja trasy początkowej
+	vector<int> obecna_trasa(liczba_miast);
+	iota(obecna_trasa.begin(), obecna_trasa.end(), 0); // iota wypełnia wektor obecna_trasa kolejnymi liczbami zaczynając od 0
 
-    // Inicjalizacja trasy początkowej
-    vector<int> obecna_trasa(liczba_miast);
-    iota(obecna_trasa.begin(), obecna_trasa.end(), 0); // iota wypełnia wektor obecna_trasa kolejnymi liczbami zaczynając od 0
+	random_device rd;
+	mt19937 gen(rd());
+	shuffle(obecna_trasa.begin() + 1, obecna_trasa.end(), gen); // losowe wymieszanie wartości wektora obecna_trasa
 
-    random_device rd;
-    mt19937 gen(rd());
-    shuffle(obecna_trasa.begin() + 1, obecna_trasa.end(), gen); // losowe wymieszanie wartości wektora obecna_trasa
+	int obecny_koszt = oblicz_koszt(obecna_trasa, macierz_kosztow); // liczy koszt początkowej trasy na podstawie macierzy kosztów
+	najlepsza_trasa_sw = obecna_trasa; // zapisuje początkową trasę jako najlepszą
+	najlepszy_koszt_sw = obecny_koszt; // i początkowy koszt jako najlepszy
 
-    int obecny_koszt = oblicz_koszt(obecna_trasa, macierz_kosztow); // liczy koszt początkowej trasy na podstawie macierzy kosztów
-    vector<int> najlepsza_trasa_sw = obecna_trasa; // zapisuje początkową trasę jako najlepszą
-    najlepszy_koszt_sw = obecny_koszt; // i początkowy koszt jako najlepszy
+	double temperatura = oblicz_temperatura_poczatkowa(obecna_trasa, macierz_kosztow); // liczy temperaturę początkową
 
-    double temperatura = oblicz_temperatura_poczatkowa(obecna_trasa, macierz_kosztow); // liczy temperaturę początkową
+	// Rozpoczęcie pomiaru czasu
+	auto start_sw = chrono::steady_clock::now();
 
-    // Rozpoczęcie pomiaru czasu
-    auto start_sw = chrono::steady_clock::now();
+	// Degeneracja
+	int iter_count = 0;
+	int limit_iteracji_bez_poprawy = 1000; // Ustalona liczba iteracji bez poprawy
 
-    while (true) {
-        // Sprawdzenie, czy przekroczono czas w sekundach
-        auto teraz_sw = chrono::steady_clock::now();
-        double czas_uplyniety = chrono::duration_cast<chrono::seconds>(teraz_sw - start_sw).count();
-        if (czas_uplyniety >= czas_w_sekundach) {
-            break; // Przerwij, jeśli czas został przekroczony
-        }
+	while (true) {
+		// Sprawdzenie, czy przekroczono czas w sekundach
+		auto teraz_sw = chrono::steady_clock::now();
+		double czas_uplyniety = chrono::duration_cast<chrono::seconds>(teraz_sw - start_sw).count();
+		if (czas_uplyniety >= czas_w_sekundach) {
+			break; // Przerwij, jeśli czas został przekroczony
+		}
 
-        // Generowanie sąsiedztwa
-        vector<int> nowa_trasa = generuj_sasiedztwo(obecna_trasa); // generuje nową trasę w sąsiedztwie poprzedniej
-        int nowy_koszt = oblicz_koszt(nowa_trasa, macierz_kosztow);
+		// Generowanie sąsiedztwa
+		vector<int> nowa_trasa = generuj_sasiedztwo(obecna_trasa); // generuje nową trasę w sąsiedztwie poprzedniej
+		int nowy_koszt = oblicz_koszt(nowa_trasa, macierz_kosztow);
 
-        // Decyzja o zaakceptowaniu nowej trasy
-        if (nowy_koszt < obecny_koszt || exp((obecny_koszt - nowy_koszt) / temperatura) > uniform_real_distribution<>(0, 1)(gen)) {
-            obecna_trasa = nowa_trasa; // Aktualizacja trasy
-            obecny_koszt = nowy_koszt;
+		// Decyzja o zaakceptowaniu nowej trasy
+		if (nowy_koszt < obecny_koszt || exp((obecny_koszt - nowy_koszt) / temperatura) > uniform_real_distribution<>(0, 1)(gen)) {
+			obecna_trasa = nowa_trasa; // Aktualizacja trasy
+			obecny_koszt = nowy_koszt;
 
-            // Aktualizacja najlepszego rozwiązania
-            if (nowy_koszt < najlepszy_koszt) {
-                najlepsza_trasa_sw = nowa_trasa;
-                najlepszy_koszt_sw = nowy_koszt;
-            }
-        }
+			// Aktualizacja najlepszego rozwiązania
+			if (nowy_koszt < najlepszy_koszt_sw) {
+				najlepsza_trasa_sw = nowa_trasa;
+				najlepszy_koszt_sw = nowy_koszt;
+				iter_count = 0; // Resetuj licznik iteracji bez poprawy
+			}
+		}
+		else {
+			iter_count++;
+		}
 
-        // Schładzanie temperatury
-        temperatura *= wspolczynnik_a; // Zmniejszenie temperatury
-        if (temperatura < 1e-5) break; // Zatrzymanie algorytmu, gdy temperatura jest bardzo niska
-    }
+		// Schładzanie temperatury
+		temperatura *= wspolczynnik_a; // Zmniejszenie temperatury
+		if (temperatura < 1e-5) break; // Zatrzymanie algorytmu, gdy temperatura jest bardzo niska
 
-    cout << "Najlepsza znaleziona trasa: ";
-    for (int miasto : najlepsza_trasa_sw) {
-        cout << miasto << " ";
-    }
-    cout << endl;
-    cout << "Calkowity koszt: " << najlepszy_koszt_sw << endl;
-    cout << "Temperatura koncowa: " << temperatura << endl;
+		// Degeneracja: Losowe restartowanie trasy po określonej liczbie iteracji bez poprawy
+		if (iter_count >= limit_iteracji_bez_poprawy) {
+			shuffle(obecna_trasa.begin() + 1, obecna_trasa.end(), gen); // Losowe wymieszanie trasy
+			obecny_koszt = oblicz_koszt(obecna_trasa, macierz_kosztow); // Oblicz koszt nowej trasy
+			iter_count = 0; // Resetuj licznik iteracji bez poprawy
+		}
+	}
 
-	return najlepsza_trasa_sw;
+	cout << "Najlepsza znaleziona trasa: ";
+	for (int miasto : najlepsza_trasa_sw) {
+		cout << miasto << " ";
+	}
+	cout << endl;
+	cout << "Calkowity koszt: " << najlepszy_koszt_sw << endl;
+	cout << "Temperatura koncowa: " << temperatura << endl;
 }
 
 
@@ -224,63 +243,43 @@ vector<int> zamien_miasta(const vector<int>& trasa, int miasto1, int miasto2) {
 }
 
 // Algorytm Tabu Search
-pair<vector<int>, int> tabu_search(const vector<vector<int>>& macierz_kosztow, int czas_w_sekundach, int dlugosc_listy_tabu) {
-	int liczba_miast = macierz_kosztow.size();
-
-	// Losowanie początkowej trasy
+void tabu_search(const vector<vector<int>>& macierz_kosztow, int czas_w_sekundach, int dlugosc_listy_tabu) {
+	najlepsza_trasa_ts.clear();
+	najlepszy_koszt_ts = 0;
 	vector<int> obecna_trasa(liczba_miast);
 	iota(obecna_trasa.begin(), obecna_trasa.end(), 0);
 
 	random_device rd;
 	mt19937 gen(rd());
-	shuffle(obecna_trasa.begin() + 1, obecna_trasa.end(), gen); // Losowe permutowanie miast (z wyjątkiem pierwszego)
+	shuffle(obecna_trasa.begin() + 1, obecna_trasa.end(), gen);  // Losowe permutowanie miast
 
-	int obecny_koszt = oblicz_koszt(obecna_trasa, macierz_kosztow);
-	vector<int> najlepsza_trasa = obecna_trasa;
-	int najlepszy_koszt = obecny_koszt;
+	int obecny_koszt = oblicz_koszt(obecna_trasa, macierz_kosztow);  // Koszt początkowy
+	najlepsza_trasa_ts = obecna_trasa;
+	najlepszy_koszt_ts = obecny_koszt;  // Przypisanie kosztu do zmiennej globalnej
 
-	// Lista tabu jako FIFO (kolejka)
+	// Lista tabu
 	deque<pair<int, int>> lista_tabu;
-
-	// Licznik odwiedzin miast
-	vector<int> licznik_odwiedzin(liczba_miast, 0);
-
-	// Parametry dywersyfikacji
-	int liczba_iteracji_bez_poprawy = 0;
-	const int prog_stagnacji = 100; // Przykładowy próg stagnacji
-
-	// Rozpoczęcie pomiaru czasu
 	auto start = chrono::steady_clock::now();
-
 	while (true) {
-		// Sprawdzenie, czy przekroczono czas w sekundach
+		// Zakończenie, jeśli przekroczono czas
 		auto teraz = chrono::steady_clock::now();
 		double czas_uplyniety = chrono::duration_cast<chrono::seconds>(teraz - start).count();
 		if (czas_uplyniety >= czas_w_sekundach) {
-			break; // Przerwij, jeśli czas został przekroczony
+			break;
 		}
-
+		// Sprawdzanie sąsiedztwa
 		vector<int> najlepszy_sasiad;
 		int najlepszy_koszt_sasiada = INT_MAX;
 		pair<int, int> najlepszy_ruch;
 
-		// Przegląd wszystkich sąsiedztw (zamiana dwóch miast w trasie)
-		for (int i = 1; i < liczba_miast - 1; ++i) { // Pomijamy pierwsze miasto
+		for (int i = 1; i < liczba_miast - 1; ++i) {
 			for (int j = i + 1; j < liczba_miast; ++j) {
 				vector<int> sasiad = zamien_miasta(obecna_trasa, i, j);
 				int koszt_sasiada = oblicz_koszt(sasiad, macierz_kosztow);
 
-				// Penalizacja za często odwiedzane miasta
-				int kara_dywersyfikacji = licznik_odwiedzin[obecna_trasa[i]] + licznik_odwiedzin[obecna_trasa[j]];
-				koszt_sasiada += kara_dywersyfikacji; // Dodajemy karę do kosztu sąsiada
-
-				// Sprawdzenie, czy ruch (i, j) jest na liście tabu
+				// Sprawdzanie, czy ruch nie jest na liście tabu
 				bool ruch_na_tabu = find(lista_tabu.begin(), lista_tabu.end(), make_pair(i, j)) != lista_tabu.end();
-
-				// Akceptujemy ruch, jeśli:
-				// - Nie jest na liście tabu
-				// - Lub poprawia globalne najlepsze rozwiązanie
-				if (!ruch_na_tabu || koszt_sasiada < najlepszy_koszt) {
+				if (!ruch_na_tabu || koszt_sasiada < najlepszy_koszt_ts) {
 					if (koszt_sasiada < najlepszy_koszt_sasiada) {
 						najlepszy_sasiad = sasiad;
 						najlepszy_koszt_sasiada = koszt_sasiada;
@@ -289,155 +288,155 @@ pair<vector<int>, int> tabu_search(const vector<vector<int>>& macierz_kosztow, i
 				}
 			}
 		}
-
-		// Jeśli nie znaleziono żadnego lepszego sąsiada, to wychodzimy z pętli
+		// Jeśli nie znaleziono lepszego sąsiada
 		if (najlepszy_sasiad.empty()) {
-			cout << "Brak lepszego sąsiada, kończymy..." << endl;
 			break;
 		}
-
 		// Aktualizacja trasy
 		obecna_trasa = najlepszy_sasiad;
 		obecny_koszt = najlepszy_koszt_sasiada;
 
-		// Aktualizacja licznika odwiedzin dla miast w obecnej trasie
-		for (int miasto : obecna_trasa) {
-			licznik_odwiedzin[miasto]++;
+		// Jeśli poprawiliśmy najlepsze rozwiązanie, aktualizujemy zmienną globalną
+		if (obecny_koszt < najlepszy_koszt_ts) {
+			najlepsza_trasa_ts = obecna_trasa;
+			najlepszy_koszt_ts = obecny_koszt;  // Aktualizacja globalnego kosztu
 		}
-
-		// Jeśli poprawiliśmy najlepsze rozwiązanie, aktualizujemy
-		if (obecny_koszt < najlepszy_koszt) {
-			najlepsza_trasa = obecna_trasa;
-			najlepszy_koszt = obecny_koszt;
-			liczba_iteracji_bez_poprawy = 0; // Reset stagnacji
-		}
-		else {
-			liczba_iteracji_bez_poprawy++;
-		}
-
 		// Dodanie ruchu do listy tabu
 		lista_tabu.push_back(najlepszy_ruch);
 		if (lista_tabu.size() > dlugosc_listy_tabu) {
-			lista_tabu.pop_front(); // Usunięcie najstarszego ruchu
-		}
-
-		// Dywersyfikacja: losowy restart po stagnacji
-		if (liczba_iteracji_bez_poprawy > prog_stagnacji) {
-			shuffle(obecna_trasa.begin() + 1, obecna_trasa.end(), gen);
-			obecny_koszt = oblicz_koszt(obecna_trasa, macierz_kosztow);
-			liczba_iteracji_bez_poprawy = 0; // Reset stagnacji
-			lista_tabu.clear();
+			lista_tabu.pop_front();  // Usuwanie najstarszego ruchu
 		}
 	}
-
-	// Zwracamy najlepszą trasę i jej koszt
-	cout << "Najlepsza trasa: ";
-	for (int miasto : najlepsza_trasa) {
+	cout << "Najlepsza znaleziona trasa: ";
+	for (int miasto : najlepsza_trasa_ts) {
 		cout << miasto << " ";
 	}
-	cout << "\nKoszt: " << najlepszy_koszt << endl;
+	cout << endl;
+	cout << "Calkowity koszt: " << najlepszy_koszt_ts << endl;
 
-	return {najlepsza_trasa, najlepszy_koszt};
 }
 
 vector<int> wczytaj_sciezke(const string& nazwa_pliku) {
 	vector<int> sciezka;
 	ifstream plik(nazwa_pliku);
 	if (!plik.is_open()) {
-		cerr << "Nie udało się otworzyc pliku: " << nazwa_pliku << endl;
+		cerr << "Nie udało się otworzyć pliku: " << nazwa_pliku << endl;
 		return sciezka;
 	}
+	int liczba_wierzcholkow;
+	plik >> liczba_wierzcholkow;  // Wczytujemy liczbę wierzchołków
+	// Wczytujemy całą ścieżkę
 	int miasto;
 	while (plik >> miasto) {
 		sciezka.push_back(miasto);
+	}
+	// Usuwamy ostatni element, ponieważ to będzie powrót do miasta początkowego
+	if (!sciezka.empty()) {
+		sciezka.pop_back();
+	}
+	plik.close();
+	// Sprawdzamy, czy liczba wczytanych miast zgadza się z liczbą wierzchołków
+	if (sciezka.size() != liczba_wierzcholkow) {
+		cerr << "Błąd: liczba wczytanych miast nie zgadza się z liczbą wierzchołków w pliku." << endl;
+		return {};  // Zwracamy pustą ścieżkę w przypadku błędu
 	}
 	return sciezka;
 }
 
 void oblicz_droge_z_wczytanej_sciezki(const vector<int>& sciezka, const vector<vector<int>>& macierz_kosztow) {
 	if (sciezka.empty()) {
-		cerr << "Sciezka jest pusta." << endl;
+		cerr << "Ścieżka jest pusta." << endl;
 		return;
 	}
-
 	int koszt_calkowity = 0;
 	for (size_t i = 0; i < sciezka.size() - 1; ++i) {
 		int start = sciezka[i];
 		int koniec = sciezka[i + 1];
-
 		// Sprawdzenie poprawności indeksów
 		if (start >= macierz_kosztow.size() || koniec >= macierz_kosztow.size()) {
 			cerr << "Niepoprawny indeks w ścieżce: " << start << " -> " << koniec << endl;
 			return;
 		}
-
 		koszt_calkowity += macierz_kosztow[start][koniec];
 	}
-
-	// Dodanie kosztu powrotu do miasta początkowego
+	// Dodanie kosztu powrotu do miasta początkowego (zakładając, że wczytaliśmy zapętloną ścieżkę)
 	int start = sciezka.back();
 	int koniec = sciezka.front();
+
 	if (start >= macierz_kosztow.size() || koniec >= macierz_kosztow.size()) {
-		cerr << "Niepoprawny indeks w sciezce: " << start << " -> " << koniec << endl;
+		cerr << "Niepoprawny indeks w ścieżce: " << start << " -> " << koniec << endl;
 		return;
 	}
-
 	koszt_calkowity += macierz_kosztow[start][koniec];  // Koszt powrotu
 
-	cout << "Calkowity koszt drogi: " << koszt_calkowity << endl;
+	cout << "Całkowity koszt drogi: " << koszt_calkowity << endl;
 }
 
-void zapis_do_pliku_symulowane_wyzarzanie(const string& nazwa_pliku, const vector<int>& najlepsza_trasa_sw, int najlepszy_koszt_sw) {
+void zapis_do_pliku_zachlanne(const string& nazwa_pliku) {
 	ofstream plik(nazwa_pliku);
 	if (!plik.is_open()) {
-		cerr << "Nie udało się otworzyc pliku: " << nazwa_pliku << endl;
+		cerr << "Nie udało się otworzyć pliku: " << nazwa_pliku << endl;
 		return;
 	}
-	// Zapis trasy
-	for (int miasto : najlepsza_trasa_sw) {
-		plik << miasto << " ";
+	// Zapis liczby wierzchołków
+	plik << liczba_miast << endl;
+	// Zapis trasy, ścieżka ma być zapętlona, więc ostatni wierzchołek łączy się z pierwszym
+	for (int miasto : najlepsza_trasa_z) {
+		plik << miasto << endl;
 	}
-	// Zapis kosztu
-	plik << "\nNajlepszy koszt: " << najlepszy_koszt_sw << endl;
 	// Zamknięcie pliku
 	plik.close();
 }
 
-void zapis_do_pliku_tabu(const vector<int>& najlepsza_trasa, int najlepszy_koszt, const string& nazwa_pliku) {
+void zapis_do_pliku_symulowane_wyzarzanie(const string& nazwa_pliku) {
+	ofstream plik(nazwa_pliku);
+	if (!plik.is_open()) {
+		cerr << "Nie udało się otworzyć pliku: " << nazwa_pliku << endl;
+		return;
+	}
+	// Zapis liczby wierzchołków
+	plik << liczba_miast << endl;
+	// Zapis trasy, ścieżka ma być zapętlona, więc ostatni wierzchołek łączy się z pierwszym
+	for (int miasto : najlepsza_trasa_sw) {
+		plik << miasto << endl;
+	}
+	plik << najlepsza_trasa_sw.front() << endl;
+	// Zamknięcie pliku
+	plik.close();
+}
+
+void zapis_do_pliku_tabu(const string& nazwa_pliku) {
 	// Otwarcie pliku do zapisu
 	ofstream plik(nazwa_pliku);
 	if (!plik.is_open()) {
-		cerr << "Nie udało się otworzyc pliku: " << nazwa_pliku << endl;
+		cerr << "Nie udało się otworzyć pliku: " << nazwa_pliku << endl;
 		return;
 	}
-	// Zapis trasy
-	for (int miasto : najlepsza_trasa) {
-		plik << miasto << " ";
+	// Zapis liczby wierzchołków
+	plik << liczba_miast << endl;
+	// Zapis trasy, ścieżka ma być zapętlona, więc ostatni wierzchołek łączy się z pierwszym
+	for (int miasto : najlepsza_trasa_ts) {
+		plik << miasto << endl;
 	}
-	plik << "\n";
-	// Zapis kosztu
-	plik << "Koszt: " << najlepszy_koszt << endl;
+	plik << najlepsza_trasa_ts.front() << endl;
 	// Zamknięcie pliku
 	plik.close();
 }
+
 
 int main()
 {
 	srand(time(0));
-	vector<vector<int>> macierz_kosztow;
-	int liczba_miast = 0;
+	vector<vector<int>> macierz_kosztow;;
 	int petla = 1;
 	int czas_w_sekundach = 10;
 	int dlugosc_listy_tabu = 10;
 	double wspolczynnik_a = 0.95;
-	vector<int> najlepsza_trasa_sw;
-	vector<int> wynik_sw;
-	int najlepszy_koszt_sw = 0;
-	pair<vector<int>, int> wynik_tabu;
+
 	while (petla == 1) {
 
 		int menu = 0;
-		cout << "MENU:\n1. Wczytanie pliku \n2. Wprowadzenie kryterium stopu. \n3. Obliczenie rozwiazania metoda zachłanna \n4. Wybor sasiedztwa. \n5. Algorytm TS.";
+		cout << "MENU:\n1. Wczytanie pliku \n2. Wprowadzenie kryterium stopu. \n3. Obliczenie rozwiazania metoda zachlanna \n4. Wybor sasiedztwa. \n5. Algorytm TS.";
 		cout << "\n6. Ustawienie wspolczynnika zmiany temperatury dla SW \n7. Algorytm SW. \n8. Zapis sciezki rozwiazania do pliku txt \n9. Wczytanie sciezki z pliku txt i obliczenie drogi na podstawie wczytanej tabeli kosztow" << endl;
 		cin >> menu;
 
@@ -446,10 +445,10 @@ int main()
 			string nazwa_pliku;
 			cout << "Podaj nazwe pliku: ";
 			cin >> nazwa_pliku;
-			macierz_kosztow = wczytywanie_macierzy(nazwa_pliku, liczba_miast);
+			macierz_kosztow = wczytywanie_macierzy(nazwa_pliku);
 			if (!macierz_kosztow.empty()) {
 				cout << "Macierz kosztow wczytana pomyslnie.\n";
-				wypisanie_macierzy(macierz_kosztow, liczba_miast);
+				wypisanie_macierzy(macierz_kosztow);
 			}
 			break;
 		}
@@ -465,7 +464,7 @@ int main()
 				cout << "Brak wczytanych danych. Najpierw wczytaj dane z pliku.\n";
 			}
 			else {
-				rozwiazanie_zachlanne(macierz_kosztow, liczba_miast);
+				rozwiazanie_zachlanne(macierz_kosztow);
 			}
 			break;
 		}
@@ -478,7 +477,7 @@ int main()
 				cout << "Brak wczytanych danych. Najpierw wczytaj dane z pliku.\n";
 			}
 			else {
-				wynik_tabu = tabu_search(macierz_kosztow, czas_w_sekundach, dlugosc_listy_tabu);
+				tabu_search(macierz_kosztow, czas_w_sekundach, dlugosc_listy_tabu);
 			}
 			break;
 		}
@@ -492,13 +491,14 @@ int main()
 				cout << "Brak wczytanych danych. Najpierw wczytaj dane z pliku.\n";
 			}
 			else {
-				wynik_sw = symulowane_wyzarzanie(macierz_kosztow, wspolczynnik_a, czas_w_sekundach, liczba_miast, najlepszy_koszt_sw);
+				symulowane_wyzarzanie(macierz_kosztow, wspolczynnik_a, czas_w_sekundach);
 			}
 			break;
 		}
 		case 8: {
-				zapis_do_pliku_tabu(wynik_tabu.first, wynik_tabu.second, "wynik_tabu.txt");
-				zapis_do_pliku_symulowane_wyzarzanie("wynik_sw.txt", wynik_sw, najlepszy_koszt_sw);
+				zapis_do_pliku_tabu("wynik_tabu.txt");
+				zapis_do_pliku_symulowane_wyzarzanie("wynik_sw.txt");
+				zapis_do_pliku_zachlanne("wynik_z.txt");
 			break;
 		}
 
