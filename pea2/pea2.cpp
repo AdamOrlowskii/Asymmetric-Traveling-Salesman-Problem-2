@@ -79,24 +79,27 @@ void rozwiazanie_zachlanne(const vector<vector<int>>& macierz_kosztow) {
 	najlepszy_koszt_z = 0;
 
 	int obecne_miasto = 0; // Startujemy z miasta 0
+	int najlepszy_lokalny_koszt = 0;
+	vector <int> najlepsza_lokalna_trasa;
+
 	odwiedzone[obecne_miasto] = true;
 	najlepsza_trasa_z.push_back(obecne_miasto);
 
 	for (int i = 0; i < liczba_miast - 1; ++i) {
-		int najmniejszy_koszt = numeric_limits<int>::max();
+		int najlepszy_koszt_z = numeric_limits<int>::max();
 		int nastepne_miasto = -1;
 
 		// Szukamy najbliższego nieodwiedzonego miasta
 		for (int j = 0; j < liczba_miast; ++j) {
-			if (!odwiedzone[j] && macierz_kosztow[obecne_miasto][j] < najmniejszy_koszt) {
-				najmniejszy_koszt = macierz_kosztow[obecne_miasto][j];
+			if (!odwiedzone[j] && macierz_kosztow[obecne_miasto][j] < najlepszy_koszt_z) {
+				najlepszy_koszt_z = macierz_kosztow[obecne_miasto][j];
 				nastepne_miasto = j;
 			}
 		}
 
 		// Przejście do następnego miasta
 		if (nastepne_miasto != -1) {
-			najlepszy_koszt_z += najmniejszy_koszt;
+			najlepszy_koszt_z += najlepszy_koszt_z;
 			obecne_miasto = nastepne_miasto;
 			odwiedzone[obecne_miasto] = true;
 			najlepsza_trasa_z.push_back(obecne_miasto);
@@ -107,6 +110,37 @@ void rozwiazanie_zachlanne(const vector<vector<int>>& macierz_kosztow) {
 	najlepszy_koszt_z += macierz_kosztow[obecne_miasto][0];
 	najlepsza_trasa_z.push_back(0);
 
+	for (int obecne_miasto = 0; obecne_miasto < liczba_miast - 1; obecne_miasto++) {
+
+		for (int i = 0; i < liczba_miast - 1; ++i) {
+			int najlepszy_lokalny_koszt = numeric_limits<int>::max();
+			int nastepne_miasto = -1;
+
+			// Szukamy najbliższego nieodwiedzonego miasta
+			for (int j = 0; j < liczba_miast; ++j) {
+				if (!odwiedzone[j] && macierz_kosztow[obecne_miasto][j] < najlepszy_lokalny_koszt) {
+					najlepszy_lokalny_koszt = macierz_kosztow[obecne_miasto][j];
+					nastepne_miasto = j;
+				}
+			}
+
+			// Przejście do następnego miasta
+			if (nastepne_miasto != -1) {
+				najlepszy_lokalny_koszt += najlepszy_lokalny_koszt;
+				obecne_miasto = nastepne_miasto;
+				odwiedzone[obecne_miasto] = true;
+				najlepsza_lokalna_trasa.push_back(obecne_miasto);
+			}
+		}
+
+		// Powrót do miasta początkowego
+		najlepszy_lokalny_koszt += macierz_kosztow[obecne_miasto][0];
+		najlepsza_lokalna_trasa.push_back(0);
+		if (najlepszy_lokalny_koszt < najlepszy_koszt_z) {
+			najlepszy_koszt_z = najlepszy_lokalny_koszt;
+			najlepsza_trasa_z = najlepsza_lokalna_trasa;
+		}
+	}
 	// Wypisanie wyników
 	cout << "Znalezione rozwiazanie zachlanne: ";
 	for (int miasto : najlepsza_trasa_z) {
