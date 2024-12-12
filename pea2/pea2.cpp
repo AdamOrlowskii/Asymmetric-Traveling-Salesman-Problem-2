@@ -464,7 +464,7 @@ int main()
 	int petla = 1;
 	int czas_w_sekundach = 10;
 	int dlugosc_listy_tabu = 10;
-	double wspolczynnik_a = 0.99999;
+	double wspolczynnik_a = 0.999999;
 
 	while (petla == 1) {
 
@@ -510,7 +510,9 @@ int main()
 				cout << "Brak wczytanych danych. Najpierw wczytaj dane z pliku.\n";
 			}
 			else {
-				tabu_search(macierz_kosztow, czas_w_sekundach, dlugosc_listy_tabu);
+				for (int i = 0; i < 10; i++) {
+					tabu_search(macierz_kosztow, czas_w_sekundach, dlugosc_listy_tabu);
+				}
 			}
 			break;
 		}
@@ -524,7 +526,9 @@ int main()
 				cout << "Brak wczytanych danych. Najpierw wczytaj dane z pliku.\n";
 			}
 			else {
-				symulowane_wyzarzanie(macierz_kosztow, wspolczynnik_a, czas_w_sekundach);
+				for (int i = 0; i < 10; i++) {
+					symulowane_wyzarzanie(macierz_kosztow, wspolczynnik_a, czas_w_sekundach);
+				}
 			}
 			break;
 		}
