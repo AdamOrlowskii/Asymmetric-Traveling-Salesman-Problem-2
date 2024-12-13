@@ -510,7 +510,20 @@ int main()
 				cout << "Brak wczytanych danych. Najpierw wczytaj dane z pliku.\n";
 			}
 			else {
-				tabu_search(macierz_kosztow, czas_w_sekundach, dlugosc_listy_tabu);
+				int ilosc = 0;
+				vector<int> trasa_do_pliku;
+				int koszt_do_pliku = INT_MAX;
+				cout << "Ile razy: ";
+				cin >> ilosc;
+				for (int i = 0; i < ilosc; i++) {
+					tabu_search(macierz_kosztow, czas_w_sekundach, dlugosc_listy_tabu);
+					if (najlepszy_koszt_ts < koszt_do_pliku) {
+						koszt_do_pliku = najlepszy_koszt_ts;
+						trasa_do_pliku = najlepsza_trasa_ts;
+					}
+				}
+				najlepsza_trasa_ts = trasa_do_pliku;
+				zapis_do_pliku_tabu("ts_ftv55.txt");
 			}
 			break;
 		}
@@ -524,7 +537,20 @@ int main()
 				cout << "Brak wczytanych danych. Najpierw wczytaj dane z pliku.\n";
 			}
 			else {
+				int ilosc = 0;
+				vector<int> trasa_do_pliku;
+				int koszt_do_pliku = INT_MAX;
+				cout << "Ile razy: ";
+				cin >> ilosc;
+				for (int i = 0; i < ilosc; i++) {
 				symulowane_wyzarzanie(macierz_kosztow, wspolczynnik_a, czas_w_sekundach);
+				if (najlepszy_koszt_sw < koszt_do_pliku) {
+					koszt_do_pliku = najlepszy_koszt_sw;
+					trasa_do_pliku = najlepsza_trasa_sw;
+				}
+				}
+				najlepsza_trasa_sw = trasa_do_pliku;
+				zapis_do_pliku_symulowane_wyzarzanie("sw_ftv55.txt");
 			}
 			break;
 		}
