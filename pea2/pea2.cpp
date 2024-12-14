@@ -249,7 +249,7 @@ void symulowane_wyzarzanie(const vector<vector<int>>& macierz_kosztow, double ws
 	cout << endl;
 	cout << "Calkowity koszt: " << najlepszy_koszt_sw << endl;
 	cout << "Temperatura koncowa: " << temperatura << endl;
-	cout << "Czas znalezienia najlepszego rozwiazania: " << czas_znalezienia << "s" << endl;
+	cout << "Czas znalezienia najlepszego rozwiazania: " << czas_znalezienia << "s\n" << endl;
 }
 
 
@@ -328,7 +328,7 @@ void tabu_search(const vector<vector<int>>& macierz_kosztow, int czas_w_sekundac
 		}
 
 		// Dywersyfikacja: jeśli brak poprawy przez kilka iteracji, wprowadzamy restart
-		if (iteracja_bez_poprawy > 50) {  // Po 50 iteracjach bez poprawy
+		if (iteracja_bez_poprawy > 3000) {  // Po 50 iteracjach bez poprawy
 			shuffle(obecna_trasa.begin() + 1, obecna_trasa.end(), gen);  // Restart trasy
 			iteracja_bez_poprawy = 0;  // Resetujemy licznik iteracji bez poprawy
 		}
@@ -346,7 +346,7 @@ void tabu_search(const vector<vector<int>>& macierz_kosztow, int czas_w_sekundac
 	}
 	cout << endl;
 	cout << "Calkowity koszt: " << najlepszy_koszt_ts << endl;
-	cout << "Czas znalezienia najlepszego rozwiazania: " << czas_znalezienia << "s" << endl;
+	cout << "Czas znalezienia najlepszego rozwiazania: " << czas_znalezienia << "s\n" << endl;
 }
 
 vector<int> wczytaj_sciezke(const string& nazwa_pliku) {
@@ -523,7 +523,7 @@ int main()
 					}
 				}
 				najlepsza_trasa_ts = trasa_do_pliku;
-				zapis_do_pliku_tabu("ts_ftv55.txt");
+				zapis_do_pliku_tabu("ts_ftv170.txt");
 			}
 			break;
 		}
@@ -550,7 +550,7 @@ int main()
 				}
 				}
 				najlepsza_trasa_sw = trasa_do_pliku;
-				zapis_do_pliku_symulowane_wyzarzanie("sw_ftv55.txt");
+				zapis_do_pliku_symulowane_wyzarzanie("sw_ftv170.txt");
 			}
 			break;
 		}
