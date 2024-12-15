@@ -199,7 +199,7 @@ void symulowane_wyzarzanie(const vector<vector<int>>& macierz_kosztow, double ws
 
 	// Degeneracja
 	int iter_count = 0;
-	int limit_iteracji_bez_poprawy = 1000; // Ustalona liczba iteracji bez poprawy
+	int limit_iteracji_bez_poprawy = 1000000; // Ustalona liczba iteracji bez poprawy
 
 	while (true) {
 		// Sprawdzenie, czy przekroczono czas w sekundach
@@ -328,7 +328,7 @@ void tabu_search(const vector<vector<int>>& macierz_kosztow, int czas_w_sekundac
 		}
 
 		// Dywersyfikacja: jeśli brak poprawy przez kilka iteracji, wprowadzamy restart
-		if (iteracja_bez_poprawy > 3000) {  // Po 50 iteracjach bez poprawy
+		if (iteracja_bez_poprawy > 2000) { 
 			shuffle(obecna_trasa.begin() + 1, obecna_trasa.end(), gen);  // Restart trasy
 			iteracja_bez_poprawy = 0;  // Resetujemy licznik iteracji bez poprawy
 		}
@@ -523,7 +523,7 @@ int main()
 					}
 				}
 				najlepsza_trasa_ts = trasa_do_pliku;
-				zapis_do_pliku_tabu("ts_ftv170.txt");
+				zapis_do_pliku_tabu("ts_rbg358.txt");
 			}
 			break;
 		}
@@ -550,7 +550,7 @@ int main()
 				}
 				}
 				najlepsza_trasa_sw = trasa_do_pliku;
-				zapis_do_pliku_symulowane_wyzarzanie("sw_ftv170.txt");
+				zapis_do_pliku_symulowane_wyzarzanie("sw_rbg358.txt");
 			}
 			break;
 		}
