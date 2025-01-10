@@ -457,6 +457,50 @@ void zapis_do_pliku_tabu(const string& nazwa_pliku) {
 }
 
 
+
+pair<vector<int>, vector<int>> krzyzowanie_ox(const vector<int>& rodzic1, const vector<int>& rodzic2)
+{
+	vector<int> dziecko1(liczba_miast, -1);
+	vector<int> dziecko2(liczba_miast, -1);
+
+	// Losowanie punktów krzyżowania, które dzielą sekwencję w sposób: <0, p1>, <p1+1, p2>, <p2+1, ostatni_gen>
+	int p1 = rand() % (liczba_miast - 2);                   // Pierwszy punkt
+	int p2 = rand() % (liczba_miast - (p1 + 2)) + (p1 + 1); // Drugi punkt
+
+	// Kopiowanie segmentów od p1+1 do p2
+	for (int i = p1 + 1; i <= p2; i++)
+	{
+		dziecko1[i] = rodzic1[i];
+		dziecko2[i] = rodzic2[i];
+	}
+
+	// Wypełnianie pozostałych miejsc w dziecko1 i dziecko2
+	int idx1 = (p2 + 1) % liczba_miast; // Start od pozycji po p2
+	for (int i = 0; i < liczba_miast; i++)
+	{
+		int el = rodzic2[(p2 + 1 + i) % liczba_miast];
+		if (find(dziecko1.begin(), dziecko1.end(), el) == dziecko1.end()) // Jeśli element nie jest w dziecko1
+		{
+			dziecko1[idx1] = el;
+			idx1 = (idx1 + 1) % liczba_miast;
+		}
+	}
+
+	int idx2 = (p2 + 1) % liczba_miast; // Start od pozycji po p2
+	for (int i = 0; i < liczba_miast; i++)
+	{
+		int el = rodzic1[(p2 + 1 + i) % liczba_miast];
+		if (find(dziecko2.begin(), dziecko2.end(), el) == dziecko2.end()) // Jeśli element nie jest w dziecko2
+		{
+			dziecko2[idx2] = el;
+			idx2 = (idx2 + 1) % liczba_miast;
+		}
+	}
+
+	return { dziecko1, dziecko2 };
+}
+
+
 int main()
 {
 	srand(time(0));
