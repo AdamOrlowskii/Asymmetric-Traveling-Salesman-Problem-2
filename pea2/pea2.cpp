@@ -557,6 +557,19 @@ vector<int> selekcja_turniejowa() {
 	return najlepszy;
 }
 
+void algorytm_genetyczny(const vector<vector<int>>& macierz_kosztow) {
+	inicjalizacja_populacji();
+	// Uzupełnienie tablicy kosztów wszystkich permutacji
+	for (int i = 0; i < wielkosc_populacji_poczatkowej; i++) {
+		oceny[i] = ocena(populacja[i], macierz_kosztow);
+	}
+
+	for (int i = 0; i < wielkosc_populacji_poczatkowej; i++) {
+		
+	}
+
+}
+
 int main()
 {
 	srand(time(0));
