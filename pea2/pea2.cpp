@@ -24,6 +24,9 @@ vector<int> najlepsza_trasa_ts;
 int najlepszy_koszt_ts;
 vector<int> najlepsza_trasa_sw;
 int najlepszy_koszt_sw;
+int wielkosc_populacji_poczatkowej;
+double wspolczynnik_mutacji;
+double wspolczynnik_krzyzowania;
 
 vector<vector<int>> wczytywanie_macierzy(const string& nazwa_pliku) {
 
@@ -497,7 +500,7 @@ pair<vector<int>, vector<int>> krzyzowanie_ox(const vector<int>& rodzic1, const 
 		}
 	}
 
-	return { dziecko1, dziecko2 };
+	return {dziecko1, dziecko2};
 }
 
 
@@ -513,8 +516,9 @@ int main()
 	while (petla == 1) {
 
 		int menu = 0;
-		cout << "MENU:\n1. Wczytanie pliku \n2. Wprowadzenie kryterium stopu. \n3. Obliczenie rozwiazania metoda zachlanna \n4. Wybor sasiedztwa. \n5. Algorytm TS.";
-		cout << "\n6. Ustawienie wspolczynnika zmiany temperatury dla SW \n7. Algorytm SW. \n8. Zapis sciezki rozwiazania do pliku txt \n9. Wczytanie sciezki z pliku txt i obliczenie drogi na podstawie wczytanej tabeli kosztow" << endl;
+		cout << "MENU:\n1. Wczytanie pliku. \n2. Wprowadzenie kryterium stopu. \n3. Obliczenie rozwiazania metoda zachlanna \n4. Algorytm TS.";
+		cout << "\n5. Ustawienie wspolczynnika zmiany temperatury dla SW \n6. Algorytm SW. \n7. Ustawienie wielkosci populacji poczatkowej. \n8. Ustawienie wspolczynnika mutacji. \n9. Ustawienie wspolczynnika krzyzowania.";
+		cout << "\n10. Algorytm genetyczny. \n11. Zapis sciezki rozwiazania do pliku txt. \n12. Wczytanie sciezki z pliku txt i obliczenie drogi na podstawie wczytanej tabeli kosztow." << endl;
 		cin >> menu;
 
 		switch (menu) {
@@ -546,10 +550,6 @@ int main()
 			break;
 		}
 		case 4: {
-			cout << "Dostepne sasiedztwa dla TS: zamiana dwoch miast.\n";
-			break;
-		}
-		case 5: {
 			if (macierz_kosztow.empty()) {
 				cout << "Brak wczytanych danych. Najpierw wczytaj dane z pliku.\n";
 			}
@@ -571,12 +571,12 @@ int main()
 			}
 			break;
 		}
-		case 6: {
+		case 5: {
 			cout << "Podaj wspolczynnik zmiany temperatury (0 < a < 1): ";
 			cin >> wspolczynnik_a;
 			break;
 		}
-		case 7: {
+		case 6: {
 			if (macierz_kosztow.empty()) {
 				cout << "Brak wczytanych danych. Najpierw wczytaj dane z pliku.\n";
 			}
@@ -598,14 +598,33 @@ int main()
 			}
 			break;
 		}
+		case 7: {
+			cout << "Podaj wielkosc populacji poczatkowej: ";
+			cin >> wielkosc_populacji_poczatkowej;
+			break;
+		}
 		case 8: {
+			cout << "Podaj wspolczynik mutacji: ";
+			cin >> wspolczynnik_mutacji;
+			break;
+		}
+		case 9: {
+			cout << "Podaj wspolczynnik krzyzowania: ";
+			cin >> wspolczynnik_krzyzowania;
+			break;
+		}
+		case 10: {
+			// uruchomienie algorytmu genetycznego
+			break;
+		}
+		case 11: {
 				zapis_do_pliku_tabu("wynik_tabu.txt");
 				zapis_do_pliku_symulowane_wyzarzanie("wynik_sw.txt");
 				zapis_do_pliku_zachlanne("wynik_z.txt");
 			break;
 		}
 
-		case 9: {
+		case 12: {
 			string nazwa_pliku;
 			cout << "Podaj nazwe pliku do wczytania sciezki: ";
 			cin >> nazwa_pliku;
