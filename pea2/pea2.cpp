@@ -503,6 +503,17 @@ pair<vector<int>, vector<int>> krzyzowanie_ox(const vector<int>& rodzic1, const 
 	return {dziecko1, dziecko2};
 }
 
+vector<int> mutacja_swap(vector<int> permutacja) {
+	int p1 = rand() % (liczba_miast - 1);
+	int p2 = rand() % (liczba_miast - 1);
+
+	while (p1 == p2) {
+		p2 = rand() % (liczba_miast - 1);
+	}
+
+	swap(permutacja[p1], permutacja[p2]);
+	return permutacja;
+}
 
 int main()
 {
