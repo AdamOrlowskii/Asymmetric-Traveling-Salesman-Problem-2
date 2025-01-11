@@ -27,6 +27,7 @@ int najlepszy_koszt_sw;
 int wielkosc_populacji_poczatkowej;
 double wspolczynnik_mutacji;
 double wspolczynnik_krzyzowania;
+vector<vector<int>> populacja;
 
 vector<vector<int>> wczytywanie_macierzy(const string& nazwa_pliku) {
 
@@ -461,8 +462,7 @@ void zapis_do_pliku_tabu(const string& nazwa_pliku) {
 
 
 
-pair<vector<int>, vector<int>> krzyzowanie_ox(const vector<int>& rodzic1, const vector<int>& rodzic2)
-{
+pair<vector<int>, vector<int>> krzyzowanie_ox(const vector<int>& rodzic1, const vector<int>& rodzic2){
 	vector<int> dziecko1(liczba_miast, -1);
 	vector<int> dziecko2(liczba_miast, -1);
 
@@ -513,6 +513,23 @@ vector<int> mutacja_swap(vector<int> permutacja) {
 
 	swap(permutacja[p1], permutacja[p2]);
 	return permutacja;
+}
+
+void inicjalizacja_populacji() {
+	vector<int> permutacja(liczba_miast);
+	for (int i = 0; i < liczba_miast; i++) {
+		permutacja[i] = i;
+	}
+	// Inicjalizacja generatora losowego
+	random_device rd;
+	default_random_engine rng(rd());
+	for (int i = 0; i < wielkosc_populacji_poczatkowej; i++)
+	{
+		// Losowe tasowanie permutacji
+		auto rng = std::default_random_engine{};
+		shuffle(begin(permutacja), end(permutacja), rng);
+		populacja.push_back(permutacja); // Dodanie permutacji do populacji
+	}
 }
 
 int main()
