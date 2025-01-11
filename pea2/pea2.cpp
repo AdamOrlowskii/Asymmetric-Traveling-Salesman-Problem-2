@@ -28,6 +28,8 @@ int wielkosc_populacji_poczatkowej;
 double wspolczynnik_mutacji;
 double wspolczynnik_krzyzowania;
 vector<vector<int>> populacja;
+int rozmiar_turnieju = 4;
+vector<int > oceny; // Wektor z kosztami wszystkich aktualnych permutacji algorytmu genetycznego
 
 vector<vector<int>> wczytywanie_macierzy(const string& nazwa_pliku) {
 
@@ -132,8 +134,6 @@ void rozwiazanie_zachlanne(const vector<vector<int>>& macierz_kosztow) {
 	cout << endl;
 	cout << "Calkowity koszt rozwiazania: " << najlepszy_koszt_z << endl;
 }
-
-
 
 // Funkcja kosztu (np. całkowita długość trasy)
 int oblicz_koszt(const vector<int>& trasa, const vector<vector<int>>& macierz_kosztow) {
@@ -461,6 +461,7 @@ void zapis_do_pliku_tabu(const string& nazwa_pliku) {
 }
 
 
+// -------------------------------------- ALGORYTM GENETYCZNY ------------------------------------------
 
 pair<vector<int>, vector<int>> krzyzowanie_ox(const vector<int>& rodzic1, const vector<int>& rodzic2){
 	vector<int> dziecko1(liczba_miast, -1);
@@ -532,16 +533,39 @@ void inicjalizacja_populacji() {
 	}
 }
 
+int ocena(const vector<int>& trasa, const vector<vector<int>>& macierz_kosztow) {
+	int koszt = 0;
+	for (size_t i = 0; i < liczba_miast - 1; i++) {
+		koszt += macierz_kosztow[trasa[i] - 1][trasa[i + 1] - 1];
+	}
+	// Dodaj koszt powrotu do początkowego miasta
+	koszt += macierz_kosztow[trasa.back() - 1][trasa[0] - 1];
+	return koszt;
+}
+
+vector<int> selekcja_turniejowa() {
+	vector<int> najlepszy;
+	int najlepszy_koszt = INT_MAX;
+
+	for (int i = 0; i < rozmiar_turnieju; i++) {
+		int indeks = rand() % wielkosc_populacji_poczatkowej;
+		if (oceny[indeks] < najlepszy_koszt) { // Porównanie na podstawie oceny
+			najlepszy_koszt = oceny[indeks];
+			najlepszy = populacja[indeks];
+		}
+	}
+	return najlepszy;
+}
+
 int main()
 {
 	srand(time(0));
 	vector<vector<int>> macierz_kosztow;;
-	int petla = 1;
 	int czas_w_sekundach = 10;
 	int dlugosc_listy_tabu = 10;
 	double wspolczynnik_a = 0.999999;
 
-	while (petla == 1) {
+	while (true) {
 
 		int menu = 0;
 		cout << "MENU:\n1. Wczytanie pliku. \n2. Wprowadzenie kryterium stopu. \n3. Obliczenie rozwiazania metoda zachlanna \n4. Algorytm TS.";
