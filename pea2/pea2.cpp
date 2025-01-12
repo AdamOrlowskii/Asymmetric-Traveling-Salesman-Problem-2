@@ -24,7 +24,7 @@ vector<int> najlepsza_trasa_ts;
 int najlepszy_koszt_ts;
 vector<int> najlepsza_trasa_sw;
 int najlepszy_koszt_sw;
-int wielkosc_populacji_poczatkowej;
+int wielkosc_populacji;
 double wspolczynnik_mutacji;
 double wspolczynnik_krzyzowania;
 vector<vector<int>> populacja;
@@ -524,7 +524,7 @@ void inicjalizacja_populacji() {
 	// Inicjalizacja generatora losowego
 	random_device rd;
 	default_random_engine rng(rd());
-	for (int i = 0; i < wielkosc_populacji_poczatkowej; i++)
+	for (int i = 0; i < wielkosc_populacji; i++)
 	{
 		// Losowe tasowanie permutacji
 		auto rng = std::default_random_engine{};
@@ -548,7 +548,7 @@ vector<int> selekcja_turniejowa() {
 	int najlepszy_koszt = INT_MAX;
 
 	for (int i = 0; i < rozmiar_turnieju; i++) {
-		int indeks = rand() % wielkosc_populacji_poczatkowej;
+		int indeks = rand() % wielkosc_populacji;
 		if (oceny[indeks] < najlepszy_koszt) { // Porównanie na podstawie oceny
 			najlepszy_koszt = oceny[indeks];
 			najlepszy = populacja[indeks];
@@ -560,13 +560,27 @@ vector<int> selekcja_turniejowa() {
 void algorytm_genetyczny(const vector<vector<int>>& macierz_kosztow) {
 	inicjalizacja_populacji();
 	// Uzupełnienie tablicy kosztów wszystkich permutacji
-	for (int i = 0; i < wielkosc_populacji_poczatkowej; i++) {
+	for (int i = 0; i < wielkosc_populacji; i++) {
 		oceny[i] = ocena(populacja[i], macierz_kosztow);
 	}
 
-	for (int i = 0; i < wielkosc_populacji_poczatkowej; i++) {
-		
+	vector<vector<int>> nowa_populacja; // Nowa populacja - dzieci
+
+	for (int i = 0; i < wielkosc_populacji / 2; i++) {
+
+		// Wybranie rodziców poprzez turniej
+		vector<int> rodzic1 = selekcja_turniejowa();
+		vector<int> rodzic2 = selekcja_turniejowa();
+
+		vector<int> dziecko1, dziecko2;
+		tie(dziecko1, dziecko2) = krzyzowanie_ox(rodzic1, rodzic2); // Rozpakowanie pary wektorów
+		dziecko1 = mutacja_swap(dziecko1);
+		dziecko2 = mutacja_swap(dziecko2);
+
+		nowa_populacja.push_back(dziecko1);
+		nowa_populacja.push_back(dziecko2);
 	}
+	populacja = nowa_populacja;
 
 }
 
@@ -665,7 +679,7 @@ int main()
 		}
 		case 7: {
 			cout << "Podaj wielkosc populacji poczatkowej: ";
-			cin >> wielkosc_populacji_poczatkowej;
+			cin >> wielkosc_populacji;
 			break;
 		}
 		case 8: {
