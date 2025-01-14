@@ -28,7 +28,7 @@ int wielkosc_populacji;
 double wspolczynnik_mutacji;
 double wspolczynnik_krzyzowania;
 vector<vector<int>> populacja;
-int rozmiar_turnieju = 4;
+int rozmiar_turnieju = 16;
 vector<int > oceny; // Wektor z kosztami wszystkich aktualnych permutacji algorytmu genetycznego
 
 vector<vector<int>> wczytywanie_macierzy(const string& nazwa_pliku) {
@@ -547,26 +547,71 @@ vector<int> selekcja_turniejowa() {
 	return najlepszy;
 }
 
-void algorytm_genetyczny(const vector<vector<int>>& macierz_kosztow, int czas_w_sekundach) {
-
+void algorytm_genetyczny(const vector<vector<int>>& macierz_kosztow, int czas_w_sekundach, string nazwa_pliku) {
+	populacja.clear();
+	oceny.clear();
 	inicjalizacja_populacji(); // Uzupełnienie tablicy kosztów wszystkich permutacji
 	auto start = chrono::steady_clock::now();
 	oceny.resize(wielkosc_populacji);
-
+	int liczba_odcinkow_czasu = 10;
+	double odcinek_czasu = czas_w_sekundach / liczba_odcinkow_czasu;
+	vector<int> najlepsze_oceny_w_przedziale;
+	vector<vector<int>> oceny_do_wykresu;
+	najlepsze_oceny_w_przedziale.resize(wielkosc_populacji);
+	najlepsze_oceny_w_przedziale = oceny;
+	double srednia_ocen = 0;
+	double najlepsza_srednia_ocen = DBL_MAX;
+	double ostatni_pomiar_czasu = 0;
+	oceny.resize(wielkosc_populacji);
+	vector<vector<int>> nowa_populacja;
 
 	while (true) {
+		nowa_populacja.clear();
 		// Zakończenie, jeśli przekroczono czas
 		auto teraz = chrono::steady_clock::now();
 		double czas_uplyniety = chrono::duration_cast<chrono::seconds>(teraz - start).count();
+
+		if (czas_uplyniety - ostatni_pomiar_czasu >= odcinek_czasu) {
+			oceny_do_wykresu.push_back(najlepsze_oceny_w_przedziale);
+			najlepsze_oceny_w_przedziale.clear();
+			najlepsze_oceny_w_przedziale.resize(wielkosc_populacji);
+			ostatni_pomiar_czasu = czas_uplyniety;
+			najlepsza_srednia_ocen = DBL_MAX;
+		}
+
 		if (czas_uplyniety >= czas_w_sekundach) {
-			break;
+			ofstream plik(nazwa_pliku);
+			if (!plik.is_open()) {
+				cerr << "Nie udało się otworzyć pliku" << endl;
+				return;
+			}
+			else {
+				for (const auto& przedzial : oceny_do_wykresu) {
+					for (const auto& ocena : przedzial) {
+						plik << ocena << ";";
+					}
+					plik << endl;
+				}
+			}
+			plik.close();
+		break;
 		}
 
 		for (int i = 0; i < wielkosc_populacji; i++) {
-			oceny[i] = oblicz_koszt(populacja[i], macierz_kosztow);
+			oceny[i] = oblicz_koszt(populacja[i], macierz_kosztow);// wektor oceny[1] = int z obliczenia kosztu sciezki ------------- dziala zapełnia się
+		}
+		
+		srednia_ocen = 0;
+
+		for (int i = 0; i < wielkosc_populacji; i++) {
+			srednia_ocen += oceny[i];
 		}
 
-		vector<vector<int>> nowa_populacja; // Nowa populacja - dzieci
+		srednia_ocen /= wielkosc_populacji;
+		if (srednia_ocen < najlepsza_srednia_ocen) {
+			najlepsza_srednia_ocen = srednia_ocen;
+			najlepsze_oceny_w_przedziale = oceny;
+		}
 
 		for (int i = 0; i < wielkosc_populacji / 2; i++) {
 
@@ -583,7 +628,6 @@ void algorytm_genetyczny(const vector<vector<int>>& macierz_kosztow, int czas_w_
 			nowa_populacja.push_back(dziecko2);
 		}
 		populacja = nowa_populacja;
-
 	}
 }
 
@@ -696,7 +740,15 @@ int main()
 			break;
 		}
 		case 10: {
-			algorytm_genetyczny(macierz_kosztow, czas_w_sekundach);
+			int ilosc;
+			cout << "Ile razy: ";
+			cin >> ilosc;
+			int powtorzenie = 0;
+			string nazwa_pliku = "gen_wyniki_wykres.csv";
+			for (powtorzenie = 0; powtorzenie < ilosc; powtorzenie++)
+			{
+				algorytm_genetyczny(macierz_kosztow, czas_w_sekundach, nazwa_pliku);
+			}
 			break;
 		}
 		case 11: {
