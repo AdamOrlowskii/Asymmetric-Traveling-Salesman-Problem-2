@@ -623,7 +623,7 @@ void algorytm_genetyczny(const vector<vector<int>>& macierz_kosztow, int czas_w_
 		// 
 		// elityzm rozwala rozmiar populacji, jakoś to trzeba naprawić
 
-		for (int i = 0; i < (wielkosc_populacji / 2) - 1; i++) {
+		for (int i = 0; i < wielkosc_populacji / 2; i++) {
 			// Wybranie rodziców poprzez turniej
 			vector<int> rodzic1 = selekcja_turniejowa(rozmiar_turnieju);
 			vector<int> rodzic2 = selekcja_turniejowa(rozmiar_turnieju);
@@ -638,10 +638,16 @@ void algorytm_genetyczny(const vector<vector<int>>& macierz_kosztow, int czas_w_
 					dziecko2 = mutacja_swap(dziecko2);
 				}
 				nowa_populacja.push_back(dziecko1);
+				if (nowa_populacja.size() == populacja.size()) {
+					break;
+				}
 				nowa_populacja.push_back(dziecko2);
 			}
 			else {
 				nowa_populacja.push_back(rodzic1);
+				if (nowa_populacja.size() == populacja.size()) {
+					break;
+				}
 				nowa_populacja.push_back(rodzic2);
 			}
 		}
