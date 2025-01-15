@@ -546,7 +546,9 @@ vector<int> selekcja_turniejowa(int rozmiar_turnieju) {
 	return najlepszy;
 }
 
-void algorytm_genetyczny(const vector<vector<int>>& macierz_kosztow, int czas_w_sekundach, string nazwa_pliku) {
+// --------------------------------- DODAĆ WYPISYWANIE WYNIKU KOŃCOWEGO
+
+void algorytm_genetyczny(const vector<vector<int>>& macierz_kosztow, int czas_w_sekundach, string nazwa_pliku, bool pierwszy_raz) {
 	double czas_w_milisekundach = czas_w_sekundach * 1000;
 	int rozmiar_turnieju = 4;
 	populacja.clear();
@@ -556,10 +558,8 @@ void algorytm_genetyczny(const vector<vector<int>>& macierz_kosztow, int czas_w_
 	oceny.resize(wielkosc_populacji);
 	int liczba_odcinkow_czasu = 40;
 	double odcinek_czasu = czas_w_milisekundach / liczba_odcinkow_czasu;
-	vector<int> najlepsze_oceny_w_przedziale;
+	vector<double> srednie_oceny_w_przedziale;
 	vector<vector<int>> oceny_do_wykresu;
-	najlepsze_oceny_w_przedziale.resize(wielkosc_populacji);
-	najlepsze_oceny_w_przedziale = oceny;
 	double srednia_ocen = 0;
 	double najlepsza_srednia_ocen = DBL_MAX;
 	double ostatni_pomiar_czasu = 0;
@@ -567,38 +567,45 @@ void algorytm_genetyczny(const vector<vector<int>>& macierz_kosztow, int czas_w_
 	vector<vector<int>> nowa_populacja;
 	vector<int> najlepszy_z_poprzeniej_generacji;
 
+	// Mam wektor wektorów populacja, populacja przechowuje wektory permutacja i na tym działam, permutacje mutuję, krzyżuję i dodaję do nowej populacji a potem ją kopiuję do starej
+	// Wektor oceny to inty koszty każdej permutacji
 	while (true) {
 		nowa_populacja.clear();
-		// Zakończenie, jeśli przekroczono czas
 		auto teraz = chrono::steady_clock::now();
 		double czas_uplyniety = chrono::duration_cast<chrono::milliseconds>(teraz - start).count();
 
+		// Sprawdzenie, czy nadszedł czas na zapisanie średnich ocen
 		if (czas_uplyniety - ostatni_pomiar_czasu >= odcinek_czasu) {
-			oceny_do_wykresu.push_back(najlepsze_oceny_w_przedziale);
-			najlepsze_oceny_w_przedziale.clear();
-			najlepsze_oceny_w_przedziale.resize(wielkosc_populacji);
+			srednie_oceny_w_przedziale.push_back(srednia_ocen);
 			ostatni_pomiar_czasu = czas_uplyniety;
 			najlepsza_srednia_ocen = DBL_MAX;
 		}
-
+		// Sprawdzenie, czy już koniec algorytmu
 		if (czas_uplyniety >= czas_w_milisekundach) {
-			ofstream plik(nazwa_pliku);
+			ofstream plik;
+			ios_base::openmode tryb_pliku;
+			if (pierwszy_raz) {
+				plik.open(nazwa_pliku, std::ios::out); // Nadpisz plik, jeśli to pierwszy raz
+			}
+			else {
+				plik.open(nazwa_pliku, std::ios::app); // Dopisz do pliku, jeśli to kolejny raz
+			}
+
 			if (!plik.is_open()) {
 				cerr << "Nie udało się otworzyć pliku" << endl;
 				return;
 			}
 			else {
-				for (const auto& przedzial : oceny_do_wykresu) {
-					for (const auto& ocena : przedzial) {
-						plik << ocena << ";";
-					}
-					plik << endl;
-				}
-			}
-			plik.close();
-		break;
-		}
 
+				for (double ocena : srednie_oceny_w_przedziale)
+				{
+					plik << ocena << ";";
+				}
+				plik << endl;
+				plik.close();
+				break;
+			}
+		}
 		for (int i = 0; i < wielkosc_populacji; i++) {
 			oceny[i] = oblicz_koszt(populacja[i], macierz_kosztow);
 		}
@@ -609,11 +616,16 @@ void algorytm_genetyczny(const vector<vector<int>>& macierz_kosztow, int czas_w_
 			srednia_ocen += oceny[i];
 		}
 
-		srednia_ocen /= wielkosc_populacji;
+		srednia_ocen /= wielkosc_populacji; // srednia ocen wszystkich permutacji w aktualnej populacji
+
 		if (srednia_ocen < najlepsza_srednia_ocen) {
 			najlepsza_srednia_ocen = srednia_ocen;
-			najlepsze_oceny_w_przedziale = oceny;
 		}
+
+		// Czyli ten kod liczy średnią kosztów całej populacji, jeżeli jest ona lepsza niż średnia uzyskana wcześniej w poprzednich populacjach w aktualnym przedziale czasowym to ona się staje najlepszą
+		// Ta średnia to jeden int, a najlepsze oceny w przedziale to już wektor kosztów każdej permutacji w populacji: permutacja1 koszt 69, permutacja2 koszt 369 itd
+		// Więc najlepsze oceny w przedziale to wektor kosztów najlepszej znalezionej populacji w przedziale czasowym. JEDEN WEKTOR JEDNEJ POPULACJI
+
 		// ---------------- elityzm ---------------
 		auto min = min_element(oceny.begin(), oceny.end());
 		int index = distance(oceny.begin(), min);
@@ -770,9 +782,11 @@ int main()
 			cin >> ilosc;
 			int powtorzenie = 0;
 			string nazwa_pliku = "gen_wyniki_wykres.csv";
+			bool pierwszy_raz = true;
 			for (powtorzenie = 0; powtorzenie < ilosc; powtorzenie++)
 			{
-				algorytm_genetyczny(macierz_kosztow, czas_w_sekundach, nazwa_pliku);
+				algorytm_genetyczny(macierz_kosztow, czas_w_sekundach, nazwa_pliku, pierwszy_raz);
+				pierwszy_raz = false;
 			}
 			break;
 		}
