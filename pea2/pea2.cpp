@@ -28,7 +28,6 @@ int wielkosc_populacji;
 double wspolczynnik_mutacji;
 double wspolczynnik_krzyzowania;
 vector<vector<int>> populacja;
-int rozmiar_turnieju = 16;
 vector<int > oceny; // Wektor z kosztami wszystkich aktualnych permutacji algorytmu genetycznego
 
 vector<vector<int>> wczytywanie_macierzy(const string& nazwa_pliku) {
@@ -533,7 +532,7 @@ void inicjalizacja_populacji() {
 	}
 }
 
-vector<int> selekcja_turniejowa() {
+vector<int> selekcja_turniejowa(int rozmiar_turnieju) {
 	vector<int> najlepszy;
 	int najlepszy_koszt = INT_MAX;
 
@@ -548,13 +547,15 @@ vector<int> selekcja_turniejowa() {
 }
 
 void algorytm_genetyczny(const vector<vector<int>>& macierz_kosztow, int czas_w_sekundach, string nazwa_pliku) {
+	double czas_w_milisekundach = czas_w_sekundach * 1000;
+	int rozmiar_turnieju = 4;
 	populacja.clear();
 	oceny.clear();
 	inicjalizacja_populacji(); // Uzupełnienie tablicy kosztów wszystkich permutacji
 	auto start = chrono::steady_clock::now();
 	oceny.resize(wielkosc_populacji);
-	int liczba_odcinkow_czasu = 10;
-	double odcinek_czasu = czas_w_sekundach / liczba_odcinkow_czasu;
+	int liczba_odcinkow_czasu = 40;
+	double odcinek_czasu = czas_w_milisekundach / liczba_odcinkow_czasu;
 	vector<int> najlepsze_oceny_w_przedziale;
 	vector<vector<int>> oceny_do_wykresu;
 	najlepsze_oceny_w_przedziale.resize(wielkosc_populacji);
@@ -564,12 +565,13 @@ void algorytm_genetyczny(const vector<vector<int>>& macierz_kosztow, int czas_w_
 	double ostatni_pomiar_czasu = 0;
 	oceny.resize(wielkosc_populacji);
 	vector<vector<int>> nowa_populacja;
+	vector<int> najlepszy_z_poprzeniej_generacji;
 
 	while (true) {
 		nowa_populacja.clear();
 		// Zakończenie, jeśli przekroczono czas
 		auto teraz = chrono::steady_clock::now();
-		double czas_uplyniety = chrono::duration_cast<chrono::seconds>(teraz - start).count();
+		double czas_uplyniety = chrono::duration_cast<chrono::milliseconds>(teraz - start).count();
 
 		if (czas_uplyniety - ostatni_pomiar_czasu >= odcinek_czasu) {
 			oceny_do_wykresu.push_back(najlepsze_oceny_w_przedziale);
@@ -579,7 +581,7 @@ void algorytm_genetyczny(const vector<vector<int>>& macierz_kosztow, int czas_w_
 			najlepsza_srednia_ocen = DBL_MAX;
 		}
 
-		if (czas_uplyniety >= czas_w_sekundach) {
+		if (czas_uplyniety >= czas_w_milisekundach) {
 			ofstream plik(nazwa_pliku);
 			if (!plik.is_open()) {
 				cerr << "Nie udało się otworzyć pliku" << endl;
@@ -598,7 +600,7 @@ void algorytm_genetyczny(const vector<vector<int>>& macierz_kosztow, int czas_w_
 		}
 
 		for (int i = 0; i < wielkosc_populacji; i++) {
-			oceny[i] = oblicz_koszt(populacja[i], macierz_kosztow);// wektor oceny[1] = int z obliczenia kosztu sciezki ------------- dziala zapełnia się
+			oceny[i] = oblicz_koszt(populacja[i], macierz_kosztow);
 		}
 		
 		srednia_ocen = 0;
@@ -612,20 +614,36 @@ void algorytm_genetyczny(const vector<vector<int>>& macierz_kosztow, int czas_w_
 			najlepsza_srednia_ocen = srednia_ocen;
 			najlepsze_oceny_w_przedziale = oceny;
 		}
+		// ---------------- elityzm ---------------
+		auto min = min_element(oceny.begin(), oceny.end());
+		int index = distance(oceny.begin(), min);
+		najlepszy_z_poprzeniej_generacji = populacja[index];
+		nowa_populacja.push_back(najlepszy_z_poprzeniej_generacji);
+		// ----------------------------------------
+		// 
+		// elityzm rozwala rozmiar populacji, jakoś to trzeba naprawić
 
-		for (int i = 0; i < wielkosc_populacji / 2; i++) {
-
+		for (int i = 0; i < (wielkosc_populacji / 2) - 1; i++) {
 			// Wybranie rodziców poprzez turniej
-			vector<int> rodzic1 = selekcja_turniejowa();
-			vector<int> rodzic2 = selekcja_turniejowa();
-
+			vector<int> rodzic1 = selekcja_turniejowa(rozmiar_turnieju);
+			vector<int> rodzic2 = selekcja_turniejowa(rozmiar_turnieju);
 			vector<int> dziecko1, dziecko2;
-			tie(dziecko1, dziecko2) = krzyzowanie_ox(rodzic1, rodzic2); // Rozpakowanie pary wektorów
-			dziecko1 = mutacja_swap(dziecko1);
-			dziecko2 = mutacja_swap(dziecko2);
+			double krzyzowanie = (double)rand() / RAND_MAX;
+			double mutacja = (double)rand() / RAND_MAX;
 
-			nowa_populacja.push_back(dziecko1);
-			nowa_populacja.push_back(dziecko2);
+			if (krzyzowanie <= wspolczynnik_krzyzowania) {
+				tie(dziecko1, dziecko2) = krzyzowanie_ox(rodzic1, rodzic2); // Rozpakowanie pary wektorów
+				if (mutacja <= wspolczynnik_mutacji) {
+					dziecko1 = mutacja_swap(dziecko1);
+					dziecko2 = mutacja_swap(dziecko2);
+				}
+				nowa_populacja.push_back(dziecko1);
+				nowa_populacja.push_back(dziecko2);
+			}
+			else {
+				nowa_populacja.push_back(rodzic1);
+				nowa_populacja.push_back(rodzic2);
+			}
 		}
 		populacja = nowa_populacja;
 	}
@@ -635,7 +653,7 @@ int main()
 {
 	srand(time(0));
 	vector<vector<int>> macierz_kosztow;;
-	int czas_w_sekundach = 10;
+	double czas_w_sekundach = 10;
 	int dlugosc_listy_tabu = 10;
 	double wspolczynnik_a = 0.999999;
 
