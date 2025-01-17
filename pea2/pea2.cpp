@@ -14,6 +14,7 @@
 #include <numeric>
 #include <deque>
 #include <utility>
+#include <iterator>
 using namespace std;
 using namespace std::chrono;
 
@@ -601,6 +602,9 @@ void algorytm_genetyczny(const vector<vector<int>>& macierz_kosztow, int czas_w_
 				{
 					plik << ocena << ";";
 				}
+				plik << ";";
+				auto najlepszy_koszt = *min_element(oceny.begin(), oceny.end());
+				plik << najlepszy_koszt;
 				plik << endl;
 				plik.close();
 				break;
