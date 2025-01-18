@@ -504,6 +504,47 @@ pair<vector<int>, vector<int>> krzyzowanie_ox(const vector<int>& rodzic1, const 
 	return {dziecko1, dziecko2};
 }
 
+pair<vector<int>, vector<int>> krzyzowanie_pmx(const vector<int>& rodzic1, const vector<int>& rodzic2) {
+	int liczba_miast = rodzic1.size();
+	vector<int> dziecko1(liczba_miast, -1);
+	vector<int> dziecko2(liczba_miast, -1);
+
+	// Losowanie punktów krzyżowania
+	int p1 = rand() % (liczba_miast - 1);                   // Punkt 1
+	int p2 = rand() % (liczba_miast - (p1 + 1)) + (p1 + 1); // Punkt 2 (musi być po p1)
+
+	// Segmenty są podzielone na: <0, p1>, <p1+1, p2>, <p2+1, ostatni_gen>
+	// Skopiuj segmenty między punktami krzyżowania
+	for (int i = p1 + 1; i <= p2; ++i) {
+		dziecko1[i] = rodzic1[i];
+		dziecko2[i] = rodzic2[i];
+	}
+
+	// Uzupełnij pozostałe geny w dzieckach
+	for (int i = 0; i < liczba_miast; ++i) {
+		if (i <= p1 || i > p2) { // Pozycje spoza <p1+1, p2>
+			// Dla dziecka1
+			int gen = rodzic2[i];
+			while (find(dziecko1.begin() + p1 + 1, dziecko1.begin() + p2 + 1, gen) != dziecko1.begin() + p2 + 1) {
+				// Jeśli gen już istnieje w segmencie, zamień go na odpowiadający gen z rodzica1
+				int indeks = find(rodzic2.begin(), rodzic2.end(), gen) - rodzic2.begin();
+				gen = rodzic1[indeks];
+			}
+			dziecko1[i] = gen;
+
+			// Dla dziecka2
+			gen = rodzic1[i];
+			while (find(dziecko2.begin() + p1 + 1, dziecko2.begin() + p2 + 1, gen) != dziecko2.begin() + p2 + 1) {
+				int indeks = find(rodzic1.begin(), rodzic1.end(), gen) - rodzic1.begin();
+				gen = rodzic2[indeks];
+			}
+			dziecko2[i] = gen;
+		}
+	}
+
+	return make_pair(dziecko1, dziecko2);
+}
+
 vector<int> mutacja_swap(vector<int> permutacja) {
 	int p1 = rand() % (liczba_miast - 1);
 	int p2 = rand() % (liczba_miast - 1);
@@ -547,7 +588,6 @@ vector<int> selekcja_turniejowa(int rozmiar_turnieju) {
 	return najlepszy;
 }
 
-// --------------------------------- DODAĆ WYPISYWANIE WYNIKU KOŃCOWEGO
 
 void algorytm_genetyczny(const vector<vector<int>>& macierz_kosztow, int czas_w_sekundach, string nazwa_pliku, bool pierwszy_raz) {
 	double czas_w_milisekundach = czas_w_sekundach * 1000;
