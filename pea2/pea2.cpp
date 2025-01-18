@@ -30,6 +30,7 @@ double wspolczynnik_mutacji;
 double wspolczynnik_krzyzowania;
 vector<vector<int>> populacja;
 vector<int > oceny; // Wektor z kosztami wszystkich aktualnych permutacji algorytmu genetycznego
+int jakie_krzyzowanie;
 
 vector<vector<int>> wczytywanie_macierzy(const string& nazwa_pliku) {
 
@@ -504,46 +505,46 @@ pair<vector<int>, vector<int>> krzyzowanie_ox(const vector<int>& rodzic1, const 
 	return {dziecko1, dziecko2};
 }
 
-pair<vector<int>, vector<int>> krzyzowanie_pmx(const vector<int>& rodzic1, const vector<int>& rodzic2) {
-	int liczba_miast = rodzic1.size();
-	vector<int> dziecko1(liczba_miast, -1);
-	vector<int> dziecko2(liczba_miast, -1);
+pair<vector<int>, vector<int>> krzyzowanie_csx(const vector<int>& rodzic1, const vector<int>& rodzic2) {
+	int n = liczba_miast;
+	vector<int> dziecko1(n, -1), dziecko2(n, -1); // Wektory dzieci wypełnione -1 (puste miejsca)
 
-	// Losowanie punktów krzyżowania
-	int p1 = rand() % (liczba_miast - 1);                   // Punkt 1
-	int p2 = rand() % (liczba_miast - (p1 + 1)) + (p1 + 1); // Punkt 2 (musi być po p1)
+	// Funkcja pomocnicza do znalezienia cykli
+	auto znajdz_cykl = [&](int start, const vector<int>& r1, const vector<int>& r2, vector<bool>& odwiedzone) {
+		vector<int> cykl;
+		int indeks = start;
+		do {
+			cykl.push_back(indeks);
+			odwiedzone[indeks] = true;
+			indeks = find(r1.begin(), r1.end(), r2[indeks]) - r1.begin();
+		} while (indeks != start);
+		return cykl;
+		};
 
-	// Segmenty są podzielone na: <0, p1>, <p1+1, p2>, <p2+1, ostatni_gen>
-	// Skopiuj segmenty między punktami krzyżowania
-	for (int i = p1 + 1; i <= p2; ++i) {
-		dziecko1[i] = rodzic1[i];
-		dziecko2[i] = rodzic2[i];
-	}
+	vector<bool> odwiedzone(n, false);
 
-	// Uzupełnij pozostałe geny w dzieckach
-	for (int i = 0; i < liczba_miast; ++i) {
-		if (i <= p1 || i > p2) { // Pozycje spoza <p1+1, p2>
-			// Dla dziecka1
-			int gen = rodzic2[i];
-			while (find(dziecko1.begin() + p1 + 1, dziecko1.begin() + p2 + 1, gen) != dziecko1.begin() + p2 + 1) {
-				// Jeśli gen już istnieje w segmencie, zamień go na odpowiadający gen z rodzica1
-				int indeks = find(rodzic2.begin(), rodzic2.end(), gen) - rodzic2.begin();
-				gen = rodzic1[indeks];
+	// Tworzymy dzieci na podstawie cykli
+	for (int i = 0; i < n; i++) {
+		if (!odwiedzone[i]) {
+			vector<int> cykl = znajdz_cykl(i, rodzic1, rodzic2, odwiedzone);
+
+			// Przenosimy geny z cyklu do dzieci
+			for (int indeks : cykl) {
+				dziecko1[indeks] = rodzic1[indeks];
+				dziecko2[indeks] = rodzic2[indeks];
 			}
-			dziecko1[i] = gen;
-
-			// Dla dziecka2
-			gen = rodzic1[i];
-			while (find(dziecko2.begin() + p1 + 1, dziecko2.begin() + p2 + 1, gen) != dziecko2.begin() + p2 + 1) {
-				int indeks = find(rodzic1.begin(), rodzic1.end(), gen) - rodzic1.begin();
-				gen = rodzic2[indeks];
-			}
-			dziecko2[i] = gen;
 		}
 	}
 
-	return make_pair(dziecko1, dziecko2);
+	// Uzupełniamy brakujące geny (te, które nie były w cyklu)
+	for (int i = 0; i < n; i++) {
+		if (dziecko1[i] == -1) dziecko1[i] = rodzic2[i];
+		if (dziecko2[i] == -1) dziecko2[i] = rodzic1[i];
+	}
+
+	return { dziecko1, dziecko2 };
 }
+
 
 vector<int> mutacja_swap(vector<int> permutacja) {
 	int p1 = rand() % (liczba_miast - 1);
@@ -686,7 +687,18 @@ void algorytm_genetyczny(const vector<vector<int>>& macierz_kosztow, int czas_w_
 			double mutacja = (double)rand() / RAND_MAX;
 
 			if (krzyzowanie <= wspolczynnik_krzyzowania) {
-				tie(dziecko1, dziecko2) = krzyzowanie_ox(rodzic1, rodzic2); // Rozpakowanie pary wektorów
+				switch (jakie_krzyzowanie)
+				{
+				case 1: {
+					tie(dziecko1, dziecko2) = krzyzowanie_ox(rodzic1, rodzic2); // Rozpakowanie pary wektorów
+					break;
+				}
+				case 2: {
+					tie(dziecko1, dziecko2) = krzyzowanie_csx(rodzic1, rodzic2); // Rozpakowanie pary wektorów
+					break;
+				}
+				}
+				
 				if (mutacja <= wspolczynnik_mutacji) {
 					dziecko1 = mutacja_swap(dziecko1);
 					dziecko2 = mutacja_swap(dziecko2);
@@ -722,7 +734,7 @@ int main()
 		int menu = 0;
 		cout << "MENU:\n1.  Wczytanie pliku. \n2.  Wprowadzenie kryterium stopu. \n3.  Obliczenie rozwiazania metoda zachlanna. \n4.  Dlugosc listy tabu. \n5.  Algorytm TS.";
 		cout << "\n6.  Ustawienie wspolczynnika zmiany temperatury dla SW \n7.  Algorytm SW. \n8.  Ustawienie wielkosci populacji poczatkowej. \n9.  Ustawienie wspolczynnika mutacji. \n10. Ustawienie wspolczynnika krzyzowania.";
-		cout << "\n11. Algorytm genetyczny. \n12. Zapis sciezki rozwiazania do pliku txt. \n13. Wczytanie sciezki z pliku txt i obliczenie drogi na podstawie wczytanej tabeli kosztow." << endl;
+		cout << "\n11. Wybor sposobu krzyzowania. \n12. Algorytm genetyczny. \n13. Zapis sciezki rozwiazania do pliku txt. \n14. Wczytanie sciezki z pliku txt i obliczenie drogi na podstawie wczytanej tabeli kosztow." << endl;
 		cin >> menu;
 
 		switch (menu) {
@@ -821,6 +833,11 @@ int main()
 			break;
 		}
 		case 11: {
+			cout << "Krzyzowanie OX czy CSX? '1' lub '2'. ";
+			cin >> jakie_krzyzowanie;
+			break;
+		}
+		case 12: {
 			int ilosc;
 			cout << "Ile razy: ";
 			cin >> ilosc;
@@ -834,14 +851,14 @@ int main()
 			}
 			break;
 		}
-		case 12: {
+		case 13: {
 				zapis_do_pliku_tabu("wynik_tabu.txt");
 				zapis_do_pliku_symulowane_wyzarzanie("wynik_sw.txt");
 				zapis_do_pliku_zachlanne("wynik_z.txt");
 			break;
 		}
 
-		case 13: {
+		case 14: {
 			string nazwa_pliku;
 			cout << "Podaj nazwe pliku do wczytania sciezki: ";
 			cin >> nazwa_pliku;
