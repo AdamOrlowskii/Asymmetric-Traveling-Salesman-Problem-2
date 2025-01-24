@@ -9,12 +9,12 @@
 #include <cmath>
 #include <sstream>
 #include <random>
-#include <cmath>
 #include <functional>
 #include <numeric>
 #include <deque>
 #include <utility>
 #include <iterator>
+#include "greedy.h"
 using namespace std;
 using namespace std::chrono;
 
@@ -31,6 +31,10 @@ double wspolczynnik_krzyzowania;
 vector<vector<int>> populacja;
 vector<int > oceny; // Wektor z kosztami wszystkich aktualnych permutacji algorytmu genetycznego
 int jakie_krzyzowanie;
+vector<vector<int>> macierz_kosztow;;
+double czas_w_sekundach = 10;
+int dlugosc_listy_tabu = 10;
+double wspolczynnik_a = 0.999999;
 
 vector<vector<int>> wczytywanie_macierzy(const string& nazwa_pliku) {
 
@@ -78,62 +82,6 @@ void wypisanie_macierzy(const vector<vector<int>>& macierz_kosztow) {
 		}
 		cout << endl;
 	}
-}
-
-void rozwiazanie_zachlanne(const vector<vector<int>>& macierz_kosztow) {
-	najlepszy_koszt_z = numeric_limits<int>::max(); // Najlepszy koszt
-
-	// Iterujemy przez każde miasto jako punkt początkowy
-	for (int startowe_miasto = 0; startowe_miasto < liczba_miast; ++startowe_miasto) {
-		vector<bool> odwiedzone(liczba_miast, false);
-		vector<int> trasa_lokalna;  // Lokalne rozwiązanie
-		int koszt_lokalny = 0;
-
-		// Startujemy z danego miasta
-		int obecne_miasto = startowe_miasto;
-		odwiedzone[obecne_miasto] = true;
-		trasa_lokalna.push_back(obecne_miasto);
-
-		// Algorytm zachłanny dla tego startowego miasta
-		for (int i = 0; i < liczba_miast - 1; ++i) {
-			int najlepszy_koszt_lokalny = numeric_limits<int>::max();
-			int nastepne_miasto = -1;
-
-			// Znajdujemy najbliższe nieodwiedzone miasto
-			for (int j = 0; j < liczba_miast; ++j) {
-				if (!odwiedzone[j] && macierz_kosztow[obecne_miasto][j] < najlepszy_koszt_lokalny) {
-					najlepszy_koszt_lokalny = macierz_kosztow[obecne_miasto][j];
-					nastepne_miasto = j;
-				}
-			}
-
-			// Przejście do najbliższego miasta
-			if (nastepne_miasto != -1) {
-				koszt_lokalny += najlepszy_koszt_lokalny;
-				obecne_miasto = nastepne_miasto;
-				odwiedzone[obecne_miasto] = true;
-				trasa_lokalna.push_back(obecne_miasto);
-			}
-		}
-
-		// Powrót do miasta początkowego
-		koszt_lokalny += macierz_kosztow[obecne_miasto][startowe_miasto];
-		trasa_lokalna.push_back(startowe_miasto);
-
-		// Aktualizacja globalnie najlepszego rozwiązania
-		if (koszt_lokalny < najlepszy_koszt_z) {
-			najlepszy_koszt_z = koszt_lokalny;
-			najlepsza_trasa_z = trasa_lokalna;
-		}
-	}
-
-	// Wypisanie wyników
-	cout << "Znalezione rozwiazanie zachlanne: ";
-	for (int miasto : najlepsza_trasa_z) {
-		cout << miasto << " ";
-	}
-	cout << endl;
-	cout << "Calkowity koszt rozwiazania: " << najlepszy_koszt_z << endl;
 }
 
 // Funkcja kosztu (np. całkowita długość trasy)
@@ -724,10 +672,6 @@ void algorytm_genetyczny(const vector<vector<int>>& macierz_kosztow, int czas_w_
 int main()
 {
 	srand(time(0));
-	vector<vector<int>> macierz_kosztow;;
-	double czas_w_sekundach = 10;
-	int dlugosc_listy_tabu = 10;
-	double wspolczynnik_a = 0.999999;
 
 	while (true) {
 
@@ -759,7 +703,7 @@ int main()
 				cout << "Brak wczytanych danych. Najpierw wczytaj dane z pliku.\n";
 			}
 			else {
-				rozwiazanie_zachlanne(macierz_kosztow);
+				greedy::rozwiazanie_zachlanne(macierz_kosztow);
 			}
 			break;
 		}
