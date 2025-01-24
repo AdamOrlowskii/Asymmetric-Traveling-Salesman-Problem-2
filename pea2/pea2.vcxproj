@@ -127,11 +127,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="greedy.cpp" />
+    <ClCompile Include="Greedy.cpp" />
     <ClCompile Include="pea2.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="greedy.h" />
+    <ClInclude Include="Greedy.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

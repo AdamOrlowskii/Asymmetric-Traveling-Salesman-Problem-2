@@ -703,7 +703,7 @@ int main()
 				cout << "Brak wczytanych danych. Najpierw wczytaj dane z pliku.\n";
 			}
 			else {
-				greedy::rozwiazanie_zachlanne(macierz_kosztow);
+				Greedy::rozwiazanie_zachlanne(macierz_kosztow);
 			}
 			break;
 		}

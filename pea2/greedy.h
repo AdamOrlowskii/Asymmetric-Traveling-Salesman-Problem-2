@@ -24,7 +24,7 @@ using namespace std::chrono;
 extern int liczba_miast, najlepszy_koszt_z;
 extern vector<int> najlepsza_trasa_z;
 
-class greedy
+class Greedy
 {
 	public:
 		static void rozwiazanie_zachlanne(const vector<vector<int>>& macierz_kosztow);
