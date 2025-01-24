@@ -127,12 +127,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="GeneticAlgorithm.cpp" />
     <ClCompile Include="Greedy.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="SimulatedAnnealing.cpp" />
     <ClCompile Include="TabuSearch.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="GeneticAlgorithm.h" />
     <ClInclude Include="Greedy.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="SimulatedAnnealing.h" />

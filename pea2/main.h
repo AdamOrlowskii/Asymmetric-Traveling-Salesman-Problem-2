@@ -39,5 +39,4 @@ void zapis_do_pliku_zachlanne(const string& nazwa_pliku);
 void zapis_do_pliku_symulowane_wyzarzanie(const string& nazwa_pliku);
 void zapis_do_pliku_tabu(const string& nazwa_pliku);
 
-
 #endif // !MAIN
