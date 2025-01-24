@@ -14,27 +14,16 @@
 #include <deque>
 #include <utility>
 #include <iterator>
-#include "greedy.h"
+#include "Greedy.h"
+#include "main.h"
+#include "TabuSearch.h"
 using namespace std;
 using namespace std::chrono;
 
-int liczba_miast;
-vector<int> najlepsza_trasa_z;
-int najlepszy_koszt_z;
-vector<int> najlepsza_trasa_ts;
-int najlepszy_koszt_ts;
-vector<int> najlepsza_trasa_sw;
-int najlepszy_koszt_sw;
-int wielkosc_populacji;
-double wspolczynnik_mutacji;
-double wspolczynnik_krzyzowania;
-vector<vector<int>> populacja;
-vector<int > oceny; // Wektor z kosztami wszystkich aktualnych permutacji algorytmu genetycznego
-int jakie_krzyzowanie;
-vector<vector<int>> macierz_kosztow;;
-double czas_w_sekundach = 10;
-int dlugosc_listy_tabu = 10;
-double wspolczynnik_a = 0.999999;
+int liczba_miast, najlepszy_koszt_z, najlepszy_koszt_ts, najlepszy_koszt_sw, wielkosc_populacji, jakie_krzyzowanie, dlugosc_listy_tabu;
+vector<int> najlepsza_trasa_z, najlepsza_trasa_ts, najlepsza_trasa_sw, oceny;
+double wspolczynnik_mutacji, wspolczynnik_krzyzowania, czas_w_sekundach, wspolczynnik_a;
+vector<vector<int>> populacja, macierz_kosztow;
 
 vector<vector<int>> wczytywanie_macierzy(const string& nazwa_pliku) {
 
@@ -213,94 +202,6 @@ vector<int> zamien_miasta(const vector<int>& trasa, int miasto1, int miasto2) {
 	return nowa_trasa;
 }
 
-// Algorytm Tabu Search
-void tabu_search(const vector<vector<int>>& macierz_kosztow, int czas_w_sekundach, int dlugosc_listy_tabu) {
-	najlepsza_trasa_ts.clear();
-	najlepszy_koszt_ts = 0;
-	vector<int> obecna_trasa(liczba_miast);
-	iota(obecna_trasa.begin(), obecna_trasa.end(), 0);
-
-	random_device rd;
-	mt19937 gen(rd());
-	shuffle(obecna_trasa.begin() + 1, obecna_trasa.end(), gen);  // Losowe permutowanie miast
-
-	int obecny_koszt = oblicz_koszt(obecna_trasa, macierz_kosztow);  // Koszt początkowy
-	najlepsza_trasa_ts = obecna_trasa;
-	najlepszy_koszt_ts = obecny_koszt;  // Przypisanie kosztu do zmiennej globalnej
-
-	// Lista tabu
-	deque<pair<int, int>> lista_tabu;
-	auto start = chrono::steady_clock::now();
-	int iteracja_bez_poprawy = 0;
-	double czas_znalezienia = 0.0;
-
-	while (true) {
-		// Zakończenie, jeśli przekroczono czas
-		auto teraz = chrono::steady_clock::now();
-		double czas_uplyniety = chrono::duration_cast<chrono::seconds>(teraz - start).count();
-		if (czas_uplyniety >= czas_w_sekundach) {
-			break;
-		}
-		// Sprawdzanie sąsiedztwa
-		vector<int> najlepszy_sasiad;
-		int najlepszy_koszt_sasiada = INT_MAX;
-		pair<int, int> najlepszy_ruch;
-		for (int i = 0; i < liczba_miast - 1; ++i) {
-			for (int j = i + 1; j < liczba_miast; ++j) {
-				vector<int> sasiad = zamien_miasta(obecna_trasa, i, j);
-				int koszt_sasiada = oblicz_koszt(sasiad, macierz_kosztow);
-
-				// Sprawdzanie, czy ruch nie jest na liście tabu
-				bool ruch_na_tabu = find(lista_tabu.begin(), lista_tabu.end(), make_pair(i, j)) != lista_tabu.end();
-				if (!ruch_na_tabu || koszt_sasiada < najlepszy_koszt_ts) {
-					if (koszt_sasiada < najlepszy_koszt_sasiada) {
-						najlepszy_sasiad = sasiad;
-						najlepszy_koszt_sasiada = koszt_sasiada;
-						najlepszy_ruch = { i, j };
-					}
-				}
-			}
-		}
-		// Jeśli nie znaleziono lepszego sąsiada
-		if (najlepszy_sasiad.empty()) {
-			break;
-		}
-		// Aktualizacja trasy
-		obecna_trasa = najlepszy_sasiad;
-		obecny_koszt = najlepszy_koszt_sasiada;
-
-		// Jeśli poprawiliśmy najlepsze rozwiązanie, aktualizujemy zmienną globalną
-		if (obecny_koszt < najlepszy_koszt_ts) {
-			najlepsza_trasa_ts = obecna_trasa;
-			najlepszy_koszt_ts = obecny_koszt;  // Aktualizacja globalnego kosztu
-			iteracja_bez_poprawy = 0;  // Resetujemy licznik iteracji bez poprawy
-			czas_znalezienia = chrono::duration_cast<chrono::seconds>(teraz - start).count();
-		}
-		else {
-			iteracja_bez_poprawy++;  // Zwiększamy licznik iteracji bez poprawy
-		}
-
-		// Dywersyfikacja: jeśli brak poprawy przez kilka iteracji, wprowadzamy restart
-		if (iteracja_bez_poprawy > 2000) { 
-			shuffle(obecna_trasa.begin() + 1, obecna_trasa.end(), gen);  // Restart trasy
-			iteracja_bez_poprawy = 0;  // Resetujemy licznik iteracji bez poprawy
-		}
-
-		// Dodanie ruchu do listy tabu
-		lista_tabu.push_back(najlepszy_ruch);
-		if (lista_tabu.size() > dlugosc_listy_tabu) {
-			lista_tabu.pop_front();  // Usuwanie najstarszego ruchu
-		}
-	}
-
-	cout << "Najlepsza znaleziona trasa: ";
-	for (int miasto : najlepsza_trasa_ts) {
-		cout << miasto << " ";
-	}
-	cout << endl;
-	cout << "Calkowity koszt: " << najlepszy_koszt_ts << endl;
-	cout << "Czas znalezienia najlepszego rozwiazania: " << czas_znalezienia << "s\n" << endl;
-}
 
 vector<int> wczytaj_sciezke(const string& nazwa_pliku) {
 	vector<int> sciezka;
@@ -723,7 +624,7 @@ int main()
 				cout << "Ile razy: ";
 				cin >> ilosc;
 				for (int i = 0; i < ilosc; i++) {
-					tabu_search(macierz_kosztow, czas_w_sekundach, dlugosc_listy_tabu);
+					TabuSearch::tabu_search(macierz_kosztow, czas_w_sekundach, dlugosc_listy_tabu);
 					if (najlepszy_koszt_ts < koszt_do_pliku) {
 						koszt_do_pliku = najlepszy_koszt_ts;
 						trasa_do_pliku = najlepsza_trasa_ts;

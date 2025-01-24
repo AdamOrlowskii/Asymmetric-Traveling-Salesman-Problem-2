@@ -128,10 +128,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Greedy.cpp" />
-    <ClCompile Include="pea2.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="TabuSearch.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Greedy.h" />
+    <ClInclude Include="main.h" />
+    <ClInclude Include="TabuSearch.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

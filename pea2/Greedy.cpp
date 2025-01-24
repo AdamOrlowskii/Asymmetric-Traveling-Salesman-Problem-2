@@ -18,7 +18,7 @@
 using namespace std;
 using namespace std::chrono;
 
-void greedy::rozwiazanie_zachlanne(const vector<vector<int>>& macierz_kosztow) {
+void Greedy::rozwiazanie_zachlanne(const vector<vector<int>>& macierz_kosztow) {
 	najlepszy_koszt_z = numeric_limits<int>::max(); // Najlepszy koszt
 
 	// Iterujemy przez ka¿de miasto jako punkt pocz¹tkowy
