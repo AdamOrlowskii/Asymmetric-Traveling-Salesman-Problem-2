@@ -165,7 +165,7 @@ void oblicz_droge_z_wczytanej_sciezki(const vector<int>& sciezka, const vector<v
 	cout << "Całkowity koszt drogi: " << koszt_calkowity << endl;
 }
 
-void zapis_do_pliku_zachlanne(const string& nazwa_pliku) {
+void zapis_do_pliku(const string& nazwa_pliku, vector<int>& najlepsza_trasa, int spr) {
 	ofstream plik(nazwa_pliku);
 	if (!plik.is_open()) {
 		cerr << "Nie udało się otworzyć pliku: " << nazwa_pliku << endl;
@@ -174,44 +174,12 @@ void zapis_do_pliku_zachlanne(const string& nazwa_pliku) {
 	// Zapis liczby wierzchołków
 	plik << liczba_miast << endl;
 	// Zapis trasy, ścieżka ma być zapętlona, więc ostatni wierzchołek łączy się z pierwszym
-	for (int miasto : najlepsza_trasa_z) {
+	for (int miasto : najlepsza_trasa) {
 		plik << miasto << endl;
 	}
-	// Zamknięcie pliku
-	plik.close();
-}
-
-void zapis_do_pliku_symulowane_wyzarzanie(const string& nazwa_pliku) {
-	ofstream plik(nazwa_pliku);
-	if (!plik.is_open()) {
-		cerr << "Nie udało się otworzyć pliku: " << nazwa_pliku << endl;
-		return;
+	if (spr == 1) {
+		plik << najlepsza_trasa.front() << endl;
 	}
-	// Zapis liczby wierzchołków
-	plik << liczba_miast << endl;
-	// Zapis trasy, ścieżka ma być zapętlona, więc ostatni wierzchołek łączy się z pierwszym
-	for (int miasto : najlepsza_trasa_sw) {
-		plik << miasto << endl;
-	}
-	plik << najlepsza_trasa_sw.front() << endl;
-	// Zamknięcie pliku
-	plik.close();
-}
-
-void zapis_do_pliku_tabu(const string& nazwa_pliku) {
-	// Otwarcie pliku do zapisu
-	ofstream plik(nazwa_pliku);
-	if (!plik.is_open()) {
-		cerr << "Nie udało się otworzyć pliku: " << nazwa_pliku << endl;
-		return;
-	}
-	// Zapis liczby wierzchołków
-	plik << liczba_miast << endl;
-	// Zapis trasy, ścieżka ma być zapętlona, więc ostatni wierzchołek łączy się z pierwszym
-	for (int miasto : najlepsza_trasa_ts) {
-		plik << miasto << endl;
-	}
-	plik << najlepsza_trasa_ts.front() << endl;
 	// Zamknięcie pliku
 	plik.close();
 }
@@ -278,7 +246,7 @@ int main()
 					}
 				}
 				najlepsza_trasa_ts = trasa_do_pliku;
-				zapis_do_pliku_tabu("ts_rbg358.txt");
+				zapis_do_pliku("ts_rbg358.txt", najlepsza_trasa_ts, 1);
 			}
 			break;
 		}
@@ -305,7 +273,7 @@ int main()
 				}
 				}
 				najlepsza_trasa_sw = trasa_do_pliku;
-				zapis_do_pliku_symulowane_wyzarzanie("sw_rbg358.txt");
+				zapis_do_pliku("sw_rbg358.txt", najlepsza_trasa_sw, 1);
 			}
 			break;
 		}
@@ -344,9 +312,9 @@ int main()
 			break;
 		}
 		case 13: {
-				zapis_do_pliku_tabu("wynik_tabu.txt");
-				zapis_do_pliku_symulowane_wyzarzanie("wynik_sw.txt");
-				zapis_do_pliku_zachlanne("wynik_z.txt");
+				zapis_do_pliku("wynik_tabu.txt", najlepsza_trasa_ts, 1);
+				zapis_do_pliku("wynik_sw.txt", najlepsza_trasa_sw, 1);
+				zapis_do_pliku("wynik_z.txt", najlepsza_trasa_z, 0);
 			break;
 		}
 

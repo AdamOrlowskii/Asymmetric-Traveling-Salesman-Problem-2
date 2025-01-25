@@ -1,5 +1,4 @@
 #pragma once
-#pragma once
 #ifndef MAIN
 #define MAIN
 
@@ -35,8 +34,7 @@ vector<int> generuj_sasiedztwo(const vector<int>& trasa);
 vector<int> zamien_miasta(const vector<int>& trasa, int miasto1, int miasto2);
 vector<int> wczytaj_sciezke(const string& nazwa_pliku);
 void oblicz_droge_z_wczytanej_sciezki(const vector<int>& sciezka, const vector<vector<int>>& macierz_kosztow);
-void zapis_do_pliku_zachlanne(const string& nazwa_pliku);
-void zapis_do_pliku_symulowane_wyzarzanie(const string& nazwa_pliku);
-void zapis_do_pliku_tabu(const string& nazwa_pliku);
+void zapis_do_pliku(const string& nazwa_pliku, vector<int>& najlepsza_trasa, int spr);
+
 
 #endif // !MAIN
