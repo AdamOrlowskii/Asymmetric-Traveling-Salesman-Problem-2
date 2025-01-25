@@ -160,7 +160,8 @@ void GeneticAlgorithm::algorytm_genetyczny(const vector<vector<int>>& macierz_ko
 	double ostatni_pomiar_czasu = 0;
 	oceny.resize(wielkosc_populacji);
 	vector<vector<int>> nowa_populacja;
-	vector<int> najlepszy_z_poprzeniej_generacji;
+	vector<int> najlepszy_z_poprzedniej_generacji;
+	int pierwszy_wynik = 1;
 
 	// Mam wektor wektorów populacja, populacja przechowuje wektory permutacja i na tym dzia³am, permutacje mutujê, krzy¿ujê i dodajê do nowej populacji a potem j¹ kopiujê do starej
 	// Wektor oceny to inty koszty ka¿dej permutacji
@@ -227,9 +228,14 @@ void GeneticAlgorithm::algorytm_genetyczny(const vector<vector<int>>& macierz_ko
 		// ---------------- elityzm ---------------
 		auto min = min_element(oceny.begin(), oceny.end());
 		int index = distance(oceny.begin(), min);
-		najlepszy_z_poprzeniej_generacji = populacja[index];
-		nowa_populacja.push_back(najlepszy_z_poprzeniej_generacji);
+		najlepszy_z_poprzedniej_generacji = populacja[index];
+		nowa_populacja.push_back(najlepszy_z_poprzedniej_generacji);
 		// ----------------------------------------
+		if (pierwszy_wynik == 1) {
+			srednie_oceny_w_przedziale.push_back(srednia_ocen);
+			pierwszy_wynik = 0;
+		}
+
 
 		for (int i = 0; i < wielkosc_populacji / 2; i++) {
 			// Wybranie rodziców poprzez turniej
