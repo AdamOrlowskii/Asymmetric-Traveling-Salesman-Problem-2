@@ -113,19 +113,23 @@ vector<int> GeneticAlgorithm::mutacja_swap(vector<int> permutacja) {
 }
 
 void GeneticAlgorithm::inicjalizacja_populacji() {
-	vector<int> permutacja(liczba_miast);
-	for (int i = 0; i < liczba_miast; i++) {
-		permutacja[i] = i;
-	}
-	// Inicjalizacja generatora losowego
 	random_device rd;
 	default_random_engine rng(rd());
-	for (int i = 0; i < wielkosc_populacji; i++)
-	{
+
+	// Pêtla tworz¹ca populacjê
+	for (int i = 0; i < wielkosc_populacji; i++) {
+		vector<int> permutacja(liczba_miast);
+
+		// Wype³nienie permutacji wartoœciami od 0 do liczba_miast-1
+		for (int j = 0; j < liczba_miast; j++) {
+			permutacja[j] = j;
+		}
+
 		// Losowe tasowanie permutacji
-		auto rng = std::default_random_engine{};
-		shuffle(begin(permutacja), end(permutacja), rng);
-		populacja.push_back(permutacja); // Dodanie permutacji do populacji
+		shuffle(permutacja.begin(), permutacja.end(), rng);
+
+		// Dodanie permutacji do populacji
+		populacja.push_back(permutacja);
 	}
 }
 
@@ -197,7 +201,6 @@ void GeneticAlgorithm::algorytm_genetyczny(const vector<vector<int>>& macierz_ko
 				{
 					plik << ocena << ";";
 				}
-				plik << ";";
 				auto najlepszy_koszt = *min_element(oceny.begin(), oceny.end());
 				plik << najlepszy_koszt;
 				plik << endl;
