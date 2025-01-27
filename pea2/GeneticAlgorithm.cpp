@@ -167,7 +167,6 @@ void GeneticAlgorithm::algorytm_genetyczny(const vector<vector<int>>& macierz_ko
 	vector<int> najlepszy_z_poprzedniej_generacji;
 	int pierwszy_wynik = 1;
 
-	// Mam wektor wektorów populacja, populacja przechowuje wektory permutacja i na tym dzia³am, permutacje mutujê, krzy¿ujê i dodajê do nowej populacji a potem j¹ kopiujê do starej
 	// Wektor oceny to inty koszty ka¿dej permutacji
 	while (true) {
 		nowa_populacja.clear();
@@ -224,9 +223,9 @@ void GeneticAlgorithm::algorytm_genetyczny(const vector<vector<int>>& macierz_ko
 			najlepsza_srednia_ocen = srednia_ocen;
 		}
 
-		// Czyli ten kod liczy œredni¹ kosztów ca³ej populacji, je¿eli jest ona lepsza ni¿ œrednia uzyskana wczeœniej w poprzednich populacjach w aktualnym przedziale czasowym to ona siê staje najlepsz¹
-		// Ta œrednia to jeden int, a najlepsze oceny w przedziale to ju¿ wektor kosztów ka¿dej permutacji w populacji: permutacja1 koszt 69, permutacja2 koszt 369 itd
-		// Wiêc najlepsze oceny w przedziale to wektor kosztów najlepszej znalezionej populacji w przedziale czasowym. JEDEN WEKTOR JEDNEJ POPULACJI
+		// Ten kod liczy œredni¹ kosztów ca³ej populacji, je¿eli jest ona lepsza ni¿ œrednia uzyskana wczeœniej w poprzednich populacjach w aktualnym przedziale czasowym to ona siê staje najlepsz¹
+		// Œrednia to jeden int, a najlepsze oceny w przedziale to ju¿ wektor kosztów ka¿dej permutacji w populacji
+		// Najlepsze oceny w przedziale to wektor kosztów najlepszej znalezionej populacji w przedziale czasowym.
 
 		// ---------------- elityzm ---------------
 		auto min = min_element(oceny.begin(), oceny.end());
