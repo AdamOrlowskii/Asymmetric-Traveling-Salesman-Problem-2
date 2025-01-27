@@ -27,7 +27,7 @@ class GeneticAlgorithm
 {
 public:
 	static pair<vector<int>, vector<int>> krzyzowanie_ox(const vector<int>& rodzic1, const vector<int>& rodzic2);
-	static pair<vector<int>, vector<int>> krzyzowanie_csx(const vector<int>& rodzic1, const vector<int>& rodzic2);
+	static pair<vector<int>, vector<int>> krzyzowanie_cx(const vector<int>& rodzic1, const vector<int>& rodzic2);
 	static vector<int> mutacja_swap(vector<int> permutacja);
 	static void inicjalizacja_populacji();
 	static vector<int> selekcja_turniejowa(int rozmiar_turnieju);

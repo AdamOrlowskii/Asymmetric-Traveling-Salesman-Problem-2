@@ -293,7 +293,7 @@ int main()
 			break;
 		}
 		case 11: {
-			cout << "Krzyzowanie OX czy CSX? '1' lub '2'. ";
+			cout << "Krzyzowanie OX czy CX? '1' lub '2'. ";
 			cin >> jakie_krzyzowanie;
 			break;
 		}

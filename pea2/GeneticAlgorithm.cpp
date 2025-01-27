@@ -60,7 +60,7 @@ pair<vector<int>, vector<int>> GeneticAlgorithm::krzyzowanie_ox(const vector<int
 	return { dziecko1, dziecko2 };
 }
 
-pair<vector<int>, vector<int>> GeneticAlgorithm::krzyzowanie_csx(const vector<int>& rodzic1, const vector<int>& rodzic2) {
+pair<vector<int>, vector<int>> GeneticAlgorithm::krzyzowanie_cx(const vector<int>& rodzic1, const vector<int>& rodzic2) {
 	int n = liczba_miast;
 	vector<int> dziecko1(n, -1), dziecko2(n, -1); // Wektory dzieci wype³nione -1 (puste miejsca)
 
@@ -255,7 +255,7 @@ void GeneticAlgorithm::algorytm_genetyczny(const vector<vector<int>>& macierz_ko
 					break;
 				}
 				case 2: {
-					tie(dziecko1, dziecko2) = krzyzowanie_csx(rodzic1, rodzic2); // Rozpakowanie pary wektorów
+					tie(dziecko1, dziecko2) = krzyzowanie_cx(rodzic1, rodzic2); // Rozpakowanie pary wektorów
 					break;
 				}
 				}
