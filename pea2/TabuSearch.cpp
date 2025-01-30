@@ -20,9 +20,14 @@ using namespace std;
 using namespace std::chrono;
 
 // Algorytm Tabu Search
-void TabuSearch::tabu_search(const vector<vector<int>>& macierz_kosztow, int czas_w_sekundach, int dlugosc_listy_tabu) {
+void TabuSearch::tabu_search(const vector<vector<int>>& macierz_kosztow, int czas_w_sekundach, int dlugosc_listy_tabu, bool pierwszy_raz, string nazwa_pliku) {
 	najlepsza_trasa_ts.clear();
 	najlepszy_koszt_ts = 0;
+	double czas_w_milisekundach = czas_w_sekundach * 1000;
+	int liczba_odcinkow_czasu = 40;
+	double odcinek_czasu = czas_w_milisekundach / liczba_odcinkow_czasu;
+	double ostatni_pomiar_czasu = 0;
+	vector<int> oceny_do_wykresu;
 	vector<int> obecna_trasa(liczba_miast);
 	iota(obecna_trasa.begin(), obecna_trasa.end(), 0);
 
@@ -41,10 +46,41 @@ void TabuSearch::tabu_search(const vector<vector<int>>& macierz_kosztow, int cza
 	double czas_znalezienia = 0.0;
 
 	while (true) {
-		// Zakoñczenie, jeœli przekroczono czas
+
 		auto teraz = chrono::steady_clock::now();
-		double czas_uplyniety = chrono::duration_cast<chrono::seconds>(teraz - start).count();
-		if (czas_uplyniety >= czas_w_sekundach) {
+		double czas_uplyniety = chrono::duration_cast<chrono::milliseconds>(teraz - start).count();
+
+		// Sprawdzenie, czy nadszed³ czas na zapisanie do csv
+		if (czas_uplyniety - ostatni_pomiar_czasu >= odcinek_czasu) {
+			oceny_do_wykresu.push_back(obecny_koszt);
+			ostatni_pomiar_czasu = czas_uplyniety;
+		}
+
+		// Zakoñczenie, jeœli przekroczono czas
+		if (czas_uplyniety >= czas_w_milisekundach) {
+			ofstream plik;
+			ios_base::openmode tryb_pliku;
+			if (pierwszy_raz) {
+				plik.open(nazwa_pliku, std::ios::out); // Nadpisz plik, jeœli to pierwszy raz
+			}
+			else {
+				plik.open(nazwa_pliku, std::ios::app); // Dopisz do pliku, jeœli to kolejny raz
+			}
+
+			if (!plik.is_open()) {
+				cerr << "Nie uda³o siê otworzyæ pliku" << endl;
+				return;
+			}
+			else {
+
+				for (double koszt : oceny_do_wykresu)
+				{
+					plik << koszt << ";";
+				}
+				plik << najlepszy_koszt_ts;
+				plik << endl;
+				plik.close();
+			}
 			break;
 		}
 		// Sprawdzanie s¹siedztwa

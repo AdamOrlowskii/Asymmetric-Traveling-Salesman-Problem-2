@@ -28,7 +28,7 @@ class SimulatedAnnealing
 {
 public:
 	static double oblicz_temperatura_poczatkowa(const vector<int>& trasa, const vector<vector<int>>& macierz_kosztow);
-	static void symulowane_wyzarzanie(const vector<vector<int>>& macierz_kosztow, double wspolczynnik_a, int czas_w_sekundach);
+	static void symulowane_wyzarzanie(const vector<vector<int>>& macierz_kosztow, double wspolczynnik_a, int czas_w_sekundach, bool pierwszy_raz, string nazwa_pliku);
 };
 
 #endif // !SA

@@ -27,7 +27,7 @@ extern vector<int> najlepsza_trasa_ts;
 class TabuSearch
 {
 public:
-	static void tabu_search(const vector<vector<int>>& macierz_kosztow, int czas_w_sekundach, int dlugosc_listy_tabu);
+	static void tabu_search(const vector<vector<int>>& macierz_kosztow, int czas_w_sekundach, int dlugosc_listy_tabu, bool pierwszy_raz, string nazwa_pliku);
 };
 
 #endif // !TABUSEARCH

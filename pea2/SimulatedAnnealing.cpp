@@ -37,12 +37,17 @@ double SimulatedAnnealing::oblicz_temperatura_poczatkowa(const vector<int>& tras
 }
 
 // Algorytm Symulowanego Wy¿arzania
-void SimulatedAnnealing::symulowane_wyzarzanie(const vector<vector<int>>& macierz_kosztow, double wspolczynnik_a, int czas_w_sekundach) {
+void SimulatedAnnealing::symulowane_wyzarzanie(const vector<vector<int>>& macierz_kosztow, double wspolczynnik_a, int czas_w_sekundach, bool pierwszy_raz, string nazwa_pliku) {
 	najlepsza_trasa_sw.clear();
 	najlepszy_koszt_sw = 0;
 	double czas_znalezienia = 0.0;
+	double czas_w_milisekundach = czas_w_sekundach * 1000;
+	int liczba_odcinkow_czasu = 40;
+	double odcinek_czasu = czas_w_milisekundach / liczba_odcinkow_czasu;
+	double ostatni_pomiar_czasu = 0;
 	// Inicjalizacja trasy pocz¹tkowej
 	vector<int> obecna_trasa(liczba_miast);
+	vector<int> oceny_do_wykresu;
 	iota(obecna_trasa.begin(), obecna_trasa.end(), 0); // iota wype³nia wektor obecna_trasa kolejnymi liczbami zaczynaj¹c od 0
 
 	random_device rd;
@@ -58,15 +63,45 @@ void SimulatedAnnealing::symulowane_wyzarzanie(const vector<vector<int>>& macier
 	// Rozpoczêcie pomiaru czasu
 	auto start_sw = chrono::steady_clock::now();
 
-	// Degeneracja
+	// Dywersyfikacja
 	int iter_count = 0;
 	int limit_iteracji_bez_poprawy = 1000000; // Ustalona liczba iteracji bez poprawy
 
 	while (true) {
-		// Sprawdzenie, czy przekroczono czas w sekundach
+
 		auto teraz_sw = chrono::steady_clock::now();
-		double czas_uplyniety = chrono::duration_cast<chrono::seconds>(teraz_sw - start_sw).count();
-		if (czas_uplyniety >= czas_w_sekundach) {
+		double czas_uplyniety = chrono::duration_cast<chrono::milliseconds>(teraz_sw - start_sw).count();
+
+		// Sprawdzenie, czy nadszed³ czas na zapisanie do csv
+		if (czas_uplyniety - ostatni_pomiar_czasu >= odcinek_czasu) {
+			oceny_do_wykresu.push_back(obecny_koszt);
+			ostatni_pomiar_czasu = czas_uplyniety;
+		}
+
+		if (czas_uplyniety >= czas_w_milisekundach) {
+			ofstream plik;
+			ios_base::openmode tryb_pliku;
+			if (pierwszy_raz) {
+				plik.open(nazwa_pliku, std::ios::out); // Nadpisz plik, jeœli to pierwszy raz
+			}
+			else {
+				plik.open(nazwa_pliku, std::ios::app); // Dopisz do pliku, jeœli to kolejny raz
+			}
+
+			if (!plik.is_open()) {
+				cerr << "Nie uda³o siê otworzyæ pliku" << endl;
+				return;
+			}
+			else {
+
+				for (double koszt : oceny_do_wykresu)
+				{
+					plik << koszt << ";";
+				}
+				plik << najlepszy_koszt_sw;
+				plik << endl;
+				plik.close();
+			}
 			break; // Przerwij, jeœli czas zosta³ przekroczony
 		}
 
@@ -103,12 +138,12 @@ void SimulatedAnnealing::symulowane_wyzarzanie(const vector<vector<int>>& macier
 		}
 	}
 
-	cout << "Najlepsza znaleziona trasa: ";
+	std::cout << "Najlepsza znaleziona trasa: ";
 	for (int miasto : najlepsza_trasa_sw) {
-		cout << miasto << " ";
+		std::cout << miasto << " ";
 	}
-	cout << endl;
-	cout << "Calkowity koszt: " << najlepszy_koszt_sw << endl;
-	cout << "Temperatura koncowa: " << temperatura << endl;
-	cout << "Czas znalezienia najlepszego rozwiazania: " << czas_znalezienia << "s\n" << endl;
+	std::cout << endl;
+	std::cout << "Calkowity koszt: " << najlepszy_koszt_sw << endl;
+	std::cout << "Temperatura koncowa: " << temperatura << endl;
+	std::cout << "Czas znalezienia najlepszego rozwiazania: " << czas_znalezienia << "s\n" << endl;
 }

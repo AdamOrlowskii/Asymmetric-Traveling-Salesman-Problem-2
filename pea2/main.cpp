@@ -238,8 +238,11 @@ int main()
 				int koszt_do_pliku = INT_MAX;
 				cout << "Ile razy: ";
 				cin >> ilosc;
+				bool pierwszy_raz = true;
+				string nazwa_pliku = "ts_wyniki_czas.csv";
 				for (int i = 0; i < ilosc; i++) {
-					TabuSearch::tabu_search(macierz_kosztow, czas_w_sekundach, dlugosc_listy_tabu);
+					TabuSearch::tabu_search(macierz_kosztow, czas_w_sekundach, dlugosc_listy_tabu, pierwszy_raz, nazwa_pliku);
+					pierwszy_raz = false;
 					if (najlepszy_koszt_ts < koszt_do_pliku) {
 						koszt_do_pliku = najlepszy_koszt_ts;
 						trasa_do_pliku = najlepsza_trasa_ts;
@@ -265,8 +268,11 @@ int main()
 				int koszt_do_pliku = INT_MAX;
 				cout << "Ile razy: ";
 				cin >> ilosc;
+				bool pierwszy_raz = true;
+				string nazwa_pliku = "sw_wyniki_czas.csv";
 				for (int i = 0; i < ilosc; i++) {
-				SimulatedAnnealing::symulowane_wyzarzanie(macierz_kosztow, wspolczynnik_a, czas_w_sekundach);
+				SimulatedAnnealing::symulowane_wyzarzanie(macierz_kosztow, wspolczynnik_a, czas_w_sekundach, pierwszy_raz, nazwa_pliku);
+				pierwszy_raz = false;
 				if (najlepszy_koszt_sw < koszt_do_pliku) {
 					koszt_do_pliku = najlepszy_koszt_sw;
 					trasa_do_pliku = najlepsza_trasa_sw;
